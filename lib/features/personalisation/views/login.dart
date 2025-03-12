@@ -1,3 +1,4 @@
+import 'package:edureach/features/personalisation/views/admin/homepage.dart';
 import 'package:edureach/features/personalisation/views/register.dart';
 import 'package:edureach/features/personalisation/views/reset_password.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -45,6 +46,11 @@ class _LoginState extends State<Login> {
       );
 
       Navigator.pop(context); // Dismiss loading dialog
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (BuildContext context) => AdminDashboard()),
+      );
 
     } on FirebaseAuthException catch (e) {
       Navigator.pop(context); // Dismiss loading dialog
