@@ -1,5 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:edureach/features/personalisation/views/admin/homepage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 import 'login.dart';
 
@@ -11,6 +15,8 @@ class Register extends StatefulWidget {
 }
 
 class _RegisterState extends State<Register> {
+
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // TextField controllers
   final usernameController = TextEditingController();
@@ -32,9 +38,93 @@ class _RegisterState extends State<Register> {
     confirmPasswordController.dispose();
   }
 
+  // Loading progress bar
+  void _showLoadingIndicator(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible:
+          false, // Prevent closing the dialog by tapping outside
+      builder: (BuildContext context) {
+        return Center(
+          child: LoadingAnimationWidget.waveDots(
+            color: Colors.black,
+            size: 100,
+          ),
+        );
+      },
+    );
+  }
+
+  // Register new users
+  void registerNewUser() async {
+    try {
+      _showLoadingIndicator(context);
+
+      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: emailController.text,
+        password: passwordController.text,
+      );
+
+      // Add user data to Firestore
+      await _firestore
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .set({
+        'email': emailController.text.trim(),
+        'name': usernameController.text,
+        'role': "",
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      if (mounted) {
+        Navigator.pop(context); // remove the loading bar
+
+        // Navigate to Admin Dashboard on
+        Navigator.pushReplacement(context,
+            MaterialPageRoute(builder: (BuildContext context) => Login()));
+
+        SnackBar(
+          content: Text(
+            "Successfully Registered.",
+            style: TextStyle(
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: Colors.black,
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'weak-password') {
+
+        SnackBar(
+          content: Text(
+            "The password provided is too weak.",
+            style: TextStyle(
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: Colors.black,
+        );
+
+      } else if (e.code == 'email-already-in-use') {
+
+        SnackBar(
+          content: Text(
+            "The account already exists for that email.",
+            style: TextStyle(
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: Colors.black,
+        );
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.only(left: 25.0, right: 25.0),
@@ -71,7 +161,7 @@ class _RegisterState extends State<Register> {
                   ),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty ) {
+                  if (value == null || value.isEmpty) {
                     return 'Please enter a Username';
                   }
                   return null;
@@ -95,7 +185,7 @@ class _RegisterState extends State<Register> {
                   ),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty ) {
+                  if (value == null || value.isEmpty) {
                     return 'Please enter am email';
                   }
                   return null;
@@ -125,19 +215,23 @@ class _RegisterState extends State<Register> {
                       });
                     },
                     icon: Icon(
-                      obscurePassword ? CupertinoIcons.eye_slash_fill : CupertinoIcons.eye,
+                      obscurePassword
+                          ? CupertinoIcons.eye_slash_fill
+                          : CupertinoIcons.eye,
                     ),
                   ),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty ) {
+                  if (value == null || value.isEmpty) {
                     return 'Please enter a password';
                   }
                   return null;
                 },
               ),
 
-              const SizedBox(height: 15,),
+              const SizedBox(
+                height: 15,
+              ),
 
               // CONFIRM PASSWORD TEXT-FIELD
               TextFormField(
@@ -158,14 +252,17 @@ class _RegisterState extends State<Register> {
                       });
                     },
                     icon: Icon(
-                      obscureConfirmPassword ? CupertinoIcons.eye_slash_fill : CupertinoIcons.eye,
+                      obscureConfirmPassword
+                          ? CupertinoIcons.eye_slash_fill
+                          : CupertinoIcons.eye,
                     ),
                   ),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty ) {
+                  if (value == null || value.isEmpty) {
                     return 'Please enter a password';
-                  } else if(confirmPasswordController.text != passwordController.text) {
+                  } else if (confirmPasswordController.text !=
+                      passwordController.text) {
                     return 'Password\'s must match';
                   }
                   return null;
@@ -179,9 +276,7 @@ class _RegisterState extends State<Register> {
               // TODO: Save user as (Admin) to Firestore & redirect to Login page
               // Register Button
               GestureDetector(
-                onTap: () {
-
-                },
+                onTap: registerNewUser,
                 child: Container(
                   width: 319,
                   height: 50,
@@ -212,7 +307,8 @@ class _RegisterState extends State<Register> {
                   onTap: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (BuildContext context) => const Login()),
+                      MaterialPageRoute(
+                          builder: (BuildContext context) => const Login()),
                     );
                   },
                   child: const Text(
