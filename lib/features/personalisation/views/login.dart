@@ -4,6 +4,7 @@ import 'package:edureach/features/personalisation/views/reset_password.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class Login extends StatefulWidget {
   const Login({
@@ -30,9 +31,10 @@ class _LoginState extends State<Login> {
     showDialog(
       context: context,
       builder: (context) {
-        return const Center(
-          child: CircularProgressIndicator(
+        return Center(
+          child: LoadingAnimationWidget.waveDots(
             color: Colors.black,
+            size: 100,
           ),
         );
       },
@@ -83,7 +85,7 @@ class _LoginState extends State<Login> {
 
               // Place Logo here
               const Text(
-                "LOGIN",
+                "Edu-Reach",
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 40,
