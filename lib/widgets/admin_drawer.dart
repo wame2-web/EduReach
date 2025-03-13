@@ -1,6 +1,7 @@
 import 'package:edureach/features/personalisation/views/admin/homepage.dart';
 import 'package:edureach/features/personalisation/views/admin/manage_courses.dart';
 import 'package:edureach/features/personalisation/views/admin/manage_users.dart';
+import 'package:edureach/features/personalisation/views/login.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -19,6 +20,8 @@ class _AdminDrawerState extends State<AdminDrawer> {
   // Logout user
   void logoutUser() async {
     await FirebaseAuth.instance.signOut();
+
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (BuildContext context) => Login()));
   }
 
   @override
