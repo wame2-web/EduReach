@@ -33,8 +33,11 @@ class _StudentDashboardState extends State<StudentDashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
 
-      body: _widgetOptions[
-      _selectedIndex],
+      body: Padding(
+        padding: const EdgeInsets.only(top: 16.0),
+        child: _widgetOptions[
+        _selectedIndex],
+      ),
 
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
