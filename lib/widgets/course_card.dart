@@ -4,7 +4,7 @@ class CourseCard extends StatelessWidget {
   final String courseName;
   final int studentCount;
   final VoidCallback onViewPressed;
-  final Color cardColor;
+  final Color containerColor;
   final Color textColor;
 
   const CourseCard({
@@ -12,49 +12,77 @@ class CourseCard extends StatelessWidget {
     required this.courseName,
     required this.studentCount,
     required this.onViewPressed,
-    this.cardColor = Colors.blue,
+    this.containerColor = const Color(0xFFF3F3F3),
     this.textColor = Colors.white,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      color: cardColor,
-      elevation: 4,
-      shape: RoundedRectangleBorder(
+
+    // Get Device Screen Size
+    final double screenSizeWidth = MediaQuery.of(context).size.width;
+    final double screenSizeHeight = MediaQuery.of(context).size.height;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: containerColor,
         borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              courseName,
-              style: TextStyle(
-                color: textColor,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+
+            Container(
+              width: 150,
+              height: 80,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(5),
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              '$studentCount Students',
-              style: TextStyle(
-                color: textColor.withOpacity(0.9),
-                fontSize: 16,
-              ),
+
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+
+                Text(
+                  courseName,
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+
+                Text(
+                  '$studentCount Students',
+                  style: TextStyle(
+                    color: textColor.withOpacity(0.9),
+                    fontSize: 14,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
             Align(
-              alignment: Alignment.centerRight,
+              alignment: Alignment.center,
               child: ElevatedButton(
                 onPressed: onViewPressed,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: textColor,
-                  foregroundColor: cardColor,
+                  foregroundColor: containerColor,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                 ),
                 child: const Text('View'),
