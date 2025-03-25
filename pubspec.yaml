@@ -15,6 +15,11 @@ dependencies:
   firebase_core: ^3.12.1               # Firebase Core is required for Firebase services.
   firebase_auth: ^5.5.1               # Firebase Auth for user authentication.
   cloud_firestore: ^5.6.5              # Cloud Firestore is a NoSQL cloud database by Firebase.
+  firebase_storage:
+  flutter_cache_manager: ^3.3.0
+  file_icon: ^1.0.0
+  open_file: ^3.2.1 # for opening files:
+  cached_network_image:                # For image handling
 
 #============== ICON PACKAGES ================#
   cupertino_icons: ^1.0.8
