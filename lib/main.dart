@@ -1,5 +1,6 @@
+import 'package:edureach/features/authentication/auth_checker.dart';
+import 'package:edureach/features/authentication/login.dart';
 import 'package:edureach/features/personalisation/views/admin/homepage.dart';
-import 'package:edureach/features/personalisation/views/login.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -24,10 +25,10 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'EduReach',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.black),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
         useMaterial3: true,
       ),
-      home: Login(),
+      home: AuthCheck(),
     );
   }
 }
