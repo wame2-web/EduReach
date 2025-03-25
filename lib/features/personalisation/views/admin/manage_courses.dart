@@ -11,14 +11,13 @@ class _ManageCoursesState extends State<ManageCourses> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Manage Courses"),
-      ),
+      body: Center(child: Text("Dashboard Content"),),
 
       floatingActionButton: FloatingActionButton(
         onPressed: () {},
-        backgroundColor: Colors.green,
-        child: Icon(
+        backgroundColor: const Color(0xFF00ADAE),
+        shape: const CircleBorder(),
+        child: const Icon(
           Icons.add,
           color: Colors.white,
         ),
