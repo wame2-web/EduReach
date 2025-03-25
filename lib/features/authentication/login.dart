@@ -1,6 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:edureach/features/authentication/register.dart';
 import 'package:edureach/features/personalisation/views/admin/homepage.dart';
 import 'package:edureach/features/personalisation/views/reset_password.dart';
+import 'package:edureach/features/personalisation/views/student/homepage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -26,10 +28,10 @@ class _LoginState extends State<Login> {
 
   // User auth
   void signUserIn() async {
-
     // show loading circle
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return Center(
           child: LoadingAnimationWidget.waveDots(
@@ -42,17 +44,49 @@ class _LoginState extends State<Login> {
 
     // try sign in
     try {
+      // Authenticate user
       await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: emailController.text.trim(), // Trim whitespace
+        email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
 
+      // Get user document from Firestore
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .where('email', isEqualTo: emailController.text.trim())
+          .get();
+
+      if (userDoc.docs.isEmpty) {
+        Navigator.pop(context); // Dismiss loading dialog
+        genericErrorMessage("User document not found");
+        return;
+      }
+
+      final userData = userDoc.docs.first.data();
+      final userRole = userData['role'] as String? ?? 'user'; // Default to 'user' if role not found
+
       Navigator.pop(context); // Dismiss loading dialog
 
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (BuildContext context) => AdminDashboard()),
-      );
+      // Navigate to appropriate dashboard based on role
+      switch (userRole.toLowerCase()) {
+        case 'admin':
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => AdminDashboard()),
+          );
+          break;
+        case 'student':
+        // Replace with your student dashboard
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => StudentDashboard()),
+          );
+          break;
+        default:
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('This user was not found. Register to login')),
+          );
+      }
 
     } on FirebaseAuthException catch (e) {
       Navigator.pop(context); // Dismiss loading dialog
@@ -62,9 +96,11 @@ class _LoginState extends State<Login> {
       } else if (e.code == 'wrong-password') {
         wrongPasswordMessage();
       } else {
-        // Handle other errors generically
         genericErrorMessage(e.message!);
       }
+    } catch (e) {
+      Navigator.pop(context); // Dismiss loading dialog
+      genericErrorMessage("An error occurred: ${e.toString()}");
     }
   }
 
