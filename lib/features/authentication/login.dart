@@ -1,5 +1,5 @@
+import 'package:edureach/features/authentication/register.dart';
 import 'package:edureach/features/personalisation/views/admin/homepage.dart';
-import 'package:edureach/features/personalisation/views/register.dart';
 import 'package:edureach/features/personalisation/views/reset_password.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
