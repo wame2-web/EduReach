@@ -1,3 +1,4 @@
+import 'package:edureach/widgets/search_input_text.dart';
 import 'package:edureach/widgets/user_card.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -15,6 +16,9 @@ class _ManageUsersState extends State<ManageUsers> {
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   void _showLoadingIndicator(BuildContext context) {
     showDialog(
@@ -53,40 +57,68 @@ class _ManageUsersState extends State<ManageUsers> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: StreamBuilder<QuerySnapshot>(
-        stream: _firestore.collection('users').snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
+      body: Column(
+        children: [
 
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
-              child: LoadingAnimationWidget.waveDots(
-                color: Colors.black,
-                size: 100,
-              ),
-            );
-          }
+          const SizedBox(height: 16),
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(8),
-            itemCount: snapshot.data!.docs.length,
-            itemBuilder: (context, index) {
-              final document = snapshot.data!.docs[index];
-              final data = document.data() as Map<String, dynamic>;
-
-              return UserCard(
-                userId: document.id,
-                displayName: data['fullName'] ?? 'No Name',
-                userRole: data['role']?.toString().toUpperCase() ?? 'N/A',
-                photoUrl: data['photoUrl'],
-                onTap: () => _deleteUser(document.id),
-                cardColor: Colors.white,
-              );
+          // Search Input
+          SearchTextField(
+            controller: _searchController,
+            hintText: 'Search courses...',
+            onChanged: (value) {
+              setState(() {
+                _searchQuery = value.toLowerCase();
+              });
             },
-          );
-        },
+          ),
+          const SizedBox(height: 16),
+
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: _firestore.collection('users').snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+            
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(
+                    child: LoadingAnimationWidget.waveDots(
+                      color: Colors.black,
+                      size: 100,
+                    ),
+                  );
+                }
+            
+                return ListView.builder(
+                  padding: const EdgeInsets.all(8),
+                  itemCount: snapshot.data!.docs.length,
+                  itemBuilder: (context, index) {
+                    final document = snapshot.data!.docs[index];
+                    final data = document.data() as Map<String, dynamic>;
+            
+                    return Column(
+                      children: [
+            
+            
+            
+                        UserCard(
+                          userId: document.id,
+                          displayName: data['fullName'] ?? 'No Name',
+                          userRole: data['role']?.toString().toUpperCase() ?? 'N/A',
+                          photoUrl: data['photoUrl'],
+                          onTap: () => _deleteUser(document.id),
+                          cardColor: Colors.white,
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
 
       floatingActionButton: FloatingActionButton(
@@ -190,7 +222,7 @@ class _ManageUsersState extends State<ManageUsers> {
                   DropdownButtonFormField<String>(
                     value: _selectedRole,
                     decoration: const InputDecoration(labelText: 'Role'),
-                    items: ['student', 'teacher', 'admin']
+                    items: ['student', 'admin']
                         .map<DropdownMenuItem<String>>((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
@@ -232,7 +264,7 @@ class _ManageUsersState extends State<ManageUsers> {
                         .doc(userCredential.user!.uid)
                         .set({
                       'email': email,
-                      'name': name,
+                      'fullName': name,
                       'role': _selectedRole,
                       'createdAt': FieldValue.serverTimestamp(),
                     });
