@@ -1,3 +1,4 @@
+import 'package:edureach/widgets/user_card.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -11,15 +12,14 @@ class ManageUsers extends StatefulWidget {
 }
 
 class _ManageUsersState extends State<ManageUsers> {
+
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Loading progress bar
   void _showLoadingIndicator(BuildContext context) {
     showDialog(
       context: context,
-      barrierDismissible:
-          false, // Prevent closing the dialog by tapping outside
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return Center(
           child: LoadingAnimationWidget.waveDots(
@@ -31,36 +31,28 @@ class _ManageUsersState extends State<ManageUsers> {
     );
   }
 
-  // Removes a user from the database
   void _deleteUser(String userId) async {
-
     try {
-
       _showLoadingIndicator(context);
-
       await _firestore.collection('users').doc(userId).delete();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('User deleted successfully')),
       );
-
-        Navigator.pop(context);
-
-
+      Navigator.pop(context);
     } catch (e) {
-
-      if(mounted) {
+      if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error deleting user: $e')),
         );
       }
-
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: StreamBuilder<QuerySnapshot>(
         stream: _firestore.collection('users').snapshots(),
         builder: (context, snapshot) {
@@ -77,50 +69,68 @@ class _ManageUsersState extends State<ManageUsers> {
             );
           }
 
-          return ListView(
-            children: snapshot.data!.docs.map((DocumentSnapshot document) {
-              Map<String, dynamic> data =
-                  document.data() as Map<String, dynamic>;
-              return ListTile(
-                subtitle: Column(
-                  mainAxisAlignment:
-                  MainAxisAlignment.start,
-                  crossAxisAlignment:
-                  CrossAxisAlignment.start,
-                  children: [
+          return ListView.builder(
+            padding: const EdgeInsets.all(8),
+            itemCount: snapshot.data!.docs.length,
+            itemBuilder: (context, index) {
+              final document = snapshot.data!.docs[index];
+              final data = document.data() as Map<String, dynamic>;
 
-                    // User Name
-                    Text(
-                      data['name'] ?? 'No Name',
-                      style: TextStyle(
-                        fontSize: 19,
-                      ),
-                    ),
-
-                    // User Email
-                    Text(data['email'] ?? 'No Email'),
-
-                    // User role
-                    Text(
-                      'Role: ${data['role']?.toString().toUpperCase() ?? 'N/A'}',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                    ),
-                  ],
-                ),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () => _deleteUser(document.id),
-                ),
+              return UserCard(
+                userId: document.id,
+                displayName: data['fullName'] ?? 'No Name',
+                userRole: data['role']?.toString().toUpperCase() ?? 'N/A',
+                photoUrl: data['photoUrl'],
+                onTap: () => _deleteUser(document.id),
+                cardColor: Colors.white,
               );
-            }).toList(),
+            },
           );
         },
       ),
 
       floatingActionButton: FloatingActionButton(
-        onPressed: _showAddUserDialog,
-        backgroundColor: Colors.green,
-        child: const Icon(Icons.add, color: Colors.white),
+        onPressed: () {
+          _showAddUserDialog();
+        },
+        backgroundColor: const Color(0xFF00ADAE),
+        shape: const CircleBorder(),
+        child: const Icon(
+          Icons.add,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  void _showUserDetails(BuildContext context, String userId, Map<String, dynamic> userData) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(userData['fullName'] ?? 'User Details'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Email: ${userData['email'] ?? 'No email'}'),
+            Text('Role: ${userData['role']?.toString().toUpperCase() ?? 'N/A'}'),
+            if (userData['createdAt'] != null)
+              Text('Joined: ${userData['createdAt'].toDate().toString()}'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _deleteUser(userId);
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
       ),
     );
   }
@@ -130,23 +140,19 @@ class _ManageUsersState extends State<ManageUsers> {
     TextEditingController emailController = TextEditingController();
     TextEditingController passwordController = TextEditingController();
     TextEditingController nameController = TextEditingController();
-    String _selectedRole = 'student'; // Default role
+    String _selectedRole = 'student';
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Add New User'),
-          backgroundColor: Colors.white,
-          actionsAlignment: MainAxisAlignment.spaceEvenly,
           content: Form(
             key: _formKey,
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-              
-                  // Name Input Field
                   TextFormField(
                     controller: nameController,
                     decoration: const InputDecoration(labelText: 'Name'),
@@ -157,8 +163,6 @@ class _ManageUsersState extends State<ManageUsers> {
                       return null;
                     },
                   ),
-              
-                  // Email Input field
                   TextFormField(
                     controller: emailController,
                     decoration: const InputDecoration(labelText: 'Email'),
@@ -169,8 +173,6 @@ class _ManageUsersState extends State<ManageUsers> {
                       return null;
                     },
                   ),
-              
-                  // Password Input Field
                   TextFormField(
                     controller: passwordController,
                     decoration: const InputDecoration(labelText: 'Password'),
@@ -185,8 +187,6 @@ class _ManageUsersState extends State<ManageUsers> {
                       return null;
                     },
                   ),
-
-                  // Role Dropdown
                   DropdownButtonFormField<String>(
                     value: _selectedRole,
                     decoration: const InputDecoration(labelText: 'Role'),
@@ -202,46 +202,31 @@ class _ManageUsersState extends State<ManageUsers> {
                         _selectedRole = newValue!;
                       });
                     },
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please select a role';
-                      }
-                      return null;
-                    },
                   ),
-
                 ],
               ),
             ),
           ),
           actions: [
-
-            // Cancel button
-            ElevatedButton(
+            TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('Cancel'),
             ),
-
-            // Save button
             ElevatedButton(
               onPressed: () async {
-
-                // _showLoadingIndicator(context);
-
                 if (_formKey.currentState!.validate()) {
-                  final String email = emailController.text.trim();
-                  final String password = passwordController.text.trim();
-                  final String name = nameController.text.trim();
-
                   try {
-                    // Create user in Firebase Auth
+                    _showLoadingIndicator(context);
+                    final email = emailController.text.trim();
+                    final password = passwordController.text.trim();
+                    final name = nameController.text.trim();
+
                     UserCredential userCredential =
-                        await _auth.createUserWithEmailAndPassword(
+                    await _auth.createUserWithEmailAndPassword(
                       email: email,
                       password: password,
                     );
 
-                    // Add user data to Firestore
                     await _firestore
                         .collection('users')
                         .doc(userCredential.user!.uid)

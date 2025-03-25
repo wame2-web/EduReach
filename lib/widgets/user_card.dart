@@ -23,19 +23,40 @@ class UserCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
+      decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
+        child: IntrinsicHeight(
           child: Row(
             children: [
+              // Colored role indicator
+              Container(
+                width: 15,
+                decoration: BoxDecoration(
+                  color: userRole.toUpperCase() == 'STUDENT'
+                      ? const Color(0xFF00ADAE)
+                      : Colors.red,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    bottomLeft: Radius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+
               // User Avatar
               CircleAvatar(
                 radius: 24,
@@ -45,43 +66,52 @@ class UserCard extends StatelessWidget {
                     : null,
                 child: photoUrl == null
                     ? Text(
-                  displayName.isNotEmpty ? displayName[0] : '?',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    color: Colors.black54,
-                  ),
-                )
+                        displayName.isNotEmpty ? displayName[0] : '?',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          color: Colors.black54,
+                        ),
+                      )
                     : null,
               ),
               const SizedBox(width: 16),
+
               // User Info
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      displayName,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    if (showRole) ...[
-                      const SizedBox(height: 4),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
                       Text(
-                        userRole,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
+                        displayName,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
+                      if (showRole) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          userRole,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
-              // Optional action icon
+
+              // Action icon
               if (onTap != null)
-                const Icon(Icons.chevron_right, color: Colors.grey),
+                const Padding(
+                  padding: EdgeInsets.only(right: 16),
+                  child: Icon(Icons.delete, color: Color(0xFF414141)),
+                ),
             ],
           ),
         ),
