@@ -47,52 +47,54 @@ class _StudentContentState extends State<StudentContent> {
 
             const SizedBox(height: 16),
 
-            Container(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+            // In Progress container text
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
 
-                  // In progress text
-                  Text(
-                    "In Progress",
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                // In progress text
+                Text(
+                  "In Progress",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
                   ),
+                ),
 
-                  Container(
-                    width: screenSizeWidth ,
-                    height: screenSizeHeight * 0.05,
-                    // padding: EdgeInsets.all(5),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 6,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Text(
-                      "Enroll in courses to keep track of your progress.",
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey.shade700
+                const SizedBox(height: 5),
+
+                // Enroll in courses text
+                Container(
+                  width: screenSizeWidth ,
+                  height: screenSizeHeight * 0.05,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 6,
+                        offset: const Offset(0, 3),
                       ),
+                    ],
+                  ),
+                  child: Text(
+                    "Enroll in courses to keep track of your progress.",
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade700
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
 
             const SizedBox(height: 10),
 
+            // Assessments text
             Text(
               "Assessments",
               style: TextStyle(
@@ -101,6 +103,9 @@ class _StudentContentState extends State<StudentContent> {
               ),
             ),
 
+            SizedBox(height: 5,),
+
+            // Quiz, Exams,
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -145,7 +150,7 @@ class _StudentContentState extends State<StudentContent> {
                   child: Text("Exams"),
                 ),
 
-                // Exams
+                // Flashcards
                 Container(
                   width: screenSizeWidth * 0.25,
                   height: screenSizeHeight * 0.15,
@@ -162,7 +167,7 @@ class _StudentContentState extends State<StudentContent> {
                     ],
                   ),
 
-                  child: Text("Exams"),
+                  child: Text("Flashcards"),
                 ),
 
               ],
@@ -170,6 +175,7 @@ class _StudentContentState extends State<StudentContent> {
 
             const SizedBox(height: 10),
 
+            // My Courses text
             Text(
                 "My Courses",
               style: TextStyle(
@@ -178,6 +184,8 @@ class _StudentContentState extends State<StudentContent> {
               ),
             ),
 
+
+            SizedBox(height: 5,),
 
             // Courses Grid
             Expanded(
@@ -203,6 +211,7 @@ class _StudentContentState extends State<StudentContent> {
                     return const Center(child: Text('No courses found'));
                   }
 
+                  // List of courses
                   return GridView.builder(
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2, // Two columns
