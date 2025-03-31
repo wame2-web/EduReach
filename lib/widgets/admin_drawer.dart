@@ -32,6 +32,7 @@ class _AdminDrawerState extends State<AdminDrawer> {
         child: ListView(
           children: [
 
+            // TODO: FETCH DATA FROM DATABASE
             // User Photo
             DrawerHeader(
               child: Column(
@@ -45,7 +46,7 @@ class _AdminDrawerState extends State<AdminDrawer> {
 
                   // User email
                   Text(
-                    "atang@gmail.com",
+                    "Admin User",
                     style: const TextStyle(
                       fontSize: 15,
                     ),
