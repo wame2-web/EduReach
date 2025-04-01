@@ -1,5 +1,6 @@
 import 'package:edureach/features/personalisation/views/student/courses.dart';
 import 'package:edureach/features/personalisation/views/student/dashboard_content.dart';
+import 'package:edureach/widgets/student_drawer.dart';
 import 'package:flutter/material.dart';
 
 class StudentDashboard extends StatefulWidget {
@@ -32,12 +33,10 @@ class _StudentDashboardState extends State<StudentDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
-      body: Padding(
-        padding: const EdgeInsets.only(top: 16.0),
-        child: _widgetOptions[
-        _selectedIndex],
-      ),
+      appBar: AppBar(),
+      drawer: StudentDrawer(),
+      body: _widgetOptions[
+      _selectedIndex],
 
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
