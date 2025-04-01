@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:edureach/features/personalisation/views/student/course_details.dart';
 import 'package:edureach/widgets/course_card.dart';
 import 'package:edureach/widgets/search_input_text.dart';
 import 'package:flutter/material.dart';
@@ -151,6 +152,6 @@ class _StudentCoursesState extends State<StudentCourses>  with SingleTickerProvi
 
   void _viewCourseDetails(String courseId) {
     // Navigate to course details screen
-
+    Navigator.push(context, MaterialPageRoute(builder: (context) => CourseDetails(courseId: courseId,)));
   }
 }

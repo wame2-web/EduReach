@@ -2,7 +2,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class CourseDetails extends StatefulWidget {
-  const CourseDetails({super.key});
+
+  final String courseId;
+
+  const CourseDetails({
+    super.key,
+    required this.courseId,
+  });
 
   @override
   State<CourseDetails> createState() => _CourseDetailsState();
