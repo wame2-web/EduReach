@@ -35,10 +35,15 @@ class _StudentDrawerState extends State<StudentDrawer> {
             DrawerHeader(
               child: Column(
                 children: [
-                  const CircleAvatar(
-                    backgroundColor: Colors.black,
-                    radius: 45,
-                    // backgroundImage: AssetImage("assets/user_avatar.jpeg"),
+                  GestureDetector(
+                    onTap: () {
+                      // TODO: NAVIGATE TO STUDENT PROFILE
+                    },
+                    child: const CircleAvatar(
+                      backgroundColor: Colors.black,
+                      radius: 45,
+                      // backgroundImage: AssetImage("assets/user_avatar.jpeg"),
+                    ),
                   ),
                   const SizedBox(height: 5),
 
@@ -91,7 +96,7 @@ class _StudentDrawerState extends State<StudentDrawer> {
                 color: Colors.black,
               ),
               title: const Text(
-                "Manage Courses",
+                "Courses",
                 style: TextStyle(
                   fontSize: 18,
                 ),
@@ -109,6 +114,23 @@ class _StudentDrawerState extends State<StudentDrawer> {
               ),
               title: const Text(
                 "My Progress",
+                style: TextStyle(
+                  fontSize: 18,
+                ),
+              ),
+            ),
+
+            // Downloads
+            ListTile(
+              onTap: () {
+
+              },
+              leading: const Icon(
+                Icons.download,
+                color: Colors.black,
+              ),
+              title: const Text(
+                "Downloads",
                 style: TextStyle(
                   fontSize: 18,
                 ),
