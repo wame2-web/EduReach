@@ -14,63 +14,99 @@ class AuthCheck extends StatefulWidget {
 }
 
 class _AuthCheckState extends State<AuthCheck> {
-  final user = FirebaseAuth.instance.currentUser;
-  String? userEmail;
-  String userName = '';
-  String userRole = '';
-  bool isLoading = true;
+  User? _user;
+  String? _userEmail;
+  String _userRole = '';
+  bool _isLoading = true;
+  bool _hasError = false;
 
   @override
   void initState() {
     super.initState();
-    if (user != null) {
-      userEmail = user?.email;
-      checkUserDetails();
-    } else {
-      setState(() {
-        isLoading = false;
-      });
-    }
+    _initializeAuthCheck();
   }
 
-  Future<void> checkUserDetails() async {
-    if (userEmail == null || userEmail!.isEmpty) {
-      setState(() {
-        isLoading = false;
-      });
-      return;
-    }
-
+  Future<void> _initializeAuthCheck() async {
     try {
-      QuerySnapshot usersSnapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .where('email', isEqualTo: userEmail)
-          .get();
+      _user = FirebaseAuth.instance.currentUser;
 
-      if (usersSnapshot.docs.isNotEmpty) {
-        DocumentSnapshot userDoc = usersSnapshot.docs.first;
-        setState(() {
-          userRole = userDoc['role'];
-          isLoading = false;
-        });
+      if (_user != null) {
+        _userEmail = _user?.email;
+        await _fetchUserRole();
       }
     } catch (e) {
       if (kDebugMode) {
-        print("Error getting user details: $e");
+        print("Error initializing auth check: $e");
       }
-      setState(() {
-        isLoading = false;
-      });
+      _hasError = true;
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _fetchUserRole() async {
+    if (_userEmail == null || _userEmail!.isEmpty) return;
+
+    try {
+      final usersSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where('email', isEqualTo: _userEmail)
+          .limit(1)
+          .get();
+
+      if (usersSnapshot.docs.isNotEmpty) {
+        final userDoc = usersSnapshot.docs.first;
+        if (mounted) {
+          setState(() {
+            _userRole = userDoc['role'] ?? '';
+          });
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error fetching user role: $e");
+      }
+      _hasError = true;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
+    if (_isLoading) {
       return const Scaffold(
         backgroundColor: Colors.white,
         body: Center(
           child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (_hasError) {
+      // Show error screen or retry option
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('Something went wrong'),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    _isLoading = true;
+                    _hasError = false;
+                  });
+                  _initializeAuthCheck();
+                },
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -85,20 +121,24 @@ class _AuthCheckState extends State<AuthCheck> {
               child: CircularProgressIndicator(),
             ),
           );
-        } else if (snapshot.hasData) {
-          // User is logged in and role has been fetched
-          if (userRole == 'student') {
-            return  StudentDashboard(); // student screen
-          } else if (userRole == 'admin') {
-            return const AdminDashboard(); // admin screen
-          } else {
-            // Invalid role
-            return const Login(); // register student
+        }
 
+        final user = snapshot.data;
+        if (user != null) {
+          // User is logged in
+          switch (_userRole) {
+            case 'student':
+              return const StudentDashboard();
+            case 'admin':
+              return const AdminDashboard();
+            default:
+            // Invalid role or role not found
+              FirebaseAuth.instance.signOut(); // Force logout for invalid roles
+              return const Login();
           }
         } else {
           // User is not logged in
-          return const Login(); // register student
+          return const Login();
         }
       },
     );
