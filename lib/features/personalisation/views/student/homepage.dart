@@ -1,5 +1,6 @@
 import 'package:edureach/features/personalisation/views/student/courses.dart';
 import 'package:edureach/features/personalisation/views/student/dashboard_content.dart';
+import 'package:edureach/features/personalisation/views/student/student_profile.dart';
 import 'package:edureach/widgets/student_drawer.dart';
 import 'package:flutter/material.dart';
 
@@ -20,7 +21,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
     StudentContent(), // Student Dashboard content
     StudentCourses(),  // student courses screen
    Center(child: Text("notifications"),),  // student notifications screen
-    Center(child: Text("profile"),), // student profile screen
+    StudentProfile(), // student profile screen
   ];
 
   // NAVIGATE TO SELECTED PAGE
