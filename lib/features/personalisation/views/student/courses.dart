@@ -10,11 +10,21 @@ class StudentCourses extends StatefulWidget {
   State<StudentCourses> createState() => _StudentCoursesState();
 }
 
-class _StudentCoursesState extends State<StudentCourses> {
+class _StudentCoursesState extends State<StudentCourses>  with SingleTickerProviderStateMixin {
 
   final TextEditingController _searchController = TextEditingController();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String _searchQuery = '';
+
+  // Tab bar view controller
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _tabController = TabController(length: 2, vsync: this);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,59 +46,86 @@ class _StudentCoursesState extends State<StudentCourses> {
                 },
               ),
               const SizedBox(height: 16),
-      
-              // Courses Grid
+
+              // Tab bar
+              TabBar(
+                controller: _tabController,
+                indicatorColor:  const Color(0xFF00ADAE),
+                labelColor: const Color(0xFF00ADAE),
+                unselectedLabelColor: Colors.grey,
+                tabs: const [
+                  Tab(text: "All Courses"),
+                  Tab(text: "My Courses"),
+                ],
+              ),
+
+              SizedBox(height: 16,),
+
+              // All courses & My courses
               Expanded(
-                child: StreamBuilder<QuerySnapshot>(
-                  stream: _firestore.collection('courses').snapshots(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasError) {
-                      return Center(child: Text('Error: ${snapshot.error}'));
-                    }
-      
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-      
-                    // Filter courses based on search query
-                    final courses = snapshot.data!.docs.where((doc) {
-                      final data = doc.data() as Map<String, dynamic>;
-                      final title = data['title']?.toString().toLowerCase() ?? '';
-                      return title.contains(_searchQuery);
-                    }).toList();
-      
-                    if (courses.isEmpty) {
-                      return const Center(child: Text('No courses found'));
-                    }
-      
-                    return GridView.builder(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2, // Two columns
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 16,
-                        childAspectRatio: 0.7, // Adjust card aspect ratio
+                child: TabBarView(
+                  controller: _tabController,
+                    children: [
+                
+                      // All courses grid
+                      StreamBuilder<QuerySnapshot>(
+                        stream: _firestore.collection('courses').snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasError) {
+                            return Center(child: Text('Error: ${snapshot.error}'));
+                          }
+                
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Center(child: CircularProgressIndicator());
+                          }
+                
+                          // Filter courses based on search query
+                          final courses = snapshot.data!.docs.where((doc) {
+                            final data = doc.data() as Map<String, dynamic>;
+                            final title = data['title']?.toString().toLowerCase() ?? '';
+                            return title.contains(_searchQuery);
+                          }).toList();
+                
+                          if (courses.isEmpty) {
+                            return const Center(child: Text('No courses found'));
+                          }
+                
+                          return GridView.builder(
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2, // Two columns
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                              childAspectRatio: 0.7, // Adjust card aspect ratio
+                            ),
+                            itemCount: courses.length,
+                            itemBuilder: (context, index) {
+                              final course = courses[index];
+                              final data = course.data() as Map<String, dynamic>;
+                              final studentCount = (data['userID'] as List?)?.length ?? 0;
+                
+                              // Define colors based on category
+                              final (cardColor, textColor) = _getCourseColors(data['category']);
+                
+                              return CourseCard(
+                                courseName: data['title'] ?? 'Untitled Course',
+                                studentCount: studentCount,
+                                onViewPressed: () => _viewCourseDetails(course.id),
+                                containerColor: cardColor,
+                                textColor: textColor,
+                              );
+                            },
+                          );
+                        },
                       ),
-                      itemCount: courses.length,
-                      itemBuilder: (context, index) {
-                        final course = courses[index];
-                        final data = course.data() as Map<String, dynamic>;
-                        final studentCount = (data['userID'] as List?)?.length ?? 0;
-      
-                        // Define colors based on category
-                        final (cardColor, textColor) = _getCourseColors(data['category']);
-      
-                        return CourseCard(
-                          courseName: data['title'] ?? 'Untitled Course',
-                          studentCount: studentCount,
-                          onViewPressed: () => _viewCourseDetails(course.id),
-                          containerColor: cardColor,
-                          textColor: textColor,
-                        );
-                      },
-                    );
-                  },
+                
+                      // My courses grid
+                      Center(child: Text("List of user courses")),
+                
+                    ],
                 ),
               ),
+
+
             ],
           ),
         ),
