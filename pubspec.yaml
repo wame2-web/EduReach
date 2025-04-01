@@ -20,6 +20,7 @@ dependencies:
   file_icon: ^1.0.0
   open_file: ^3.2.1 # for opening files:
   cached_network_image:                # For image handling
+  intl: ^0.18.1
 
 #============== ICON PACKAGES ================#
   cupertino_icons: ^1.0.8
