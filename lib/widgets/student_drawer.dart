@@ -1,6 +1,11 @@
 import 'package:edureach/features/authentication/login.dart';
 import 'package:edureach/features/personalisation/views/student/courses.dart';
+import 'package:edureach/features/personalisation/views/student/downloads.dart';
 import 'package:edureach/features/personalisation/views/student/homepage.dart';
+import 'package:edureach/features/personalisation/views/student/notifications.dart';
+import 'package:edureach/features/personalisation/views/student/reports.dart';
+import 'package:edureach/features/personalisation/views/student/student_profile.dart';
+import 'package:edureach/features/personalisation/views/student/student_progress.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -37,7 +42,7 @@ class _StudentDrawerState extends State<StudentDrawer> {
                 children: [
                   GestureDetector(
                     onTap: () {
-                      // TODO: NAVIGATE TO STUDENT PROFILE
+                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => StudentProfile()));
                     },
                     child: const CircleAvatar(
                       backgroundColor: Colors.black,
@@ -106,7 +111,7 @@ class _StudentDrawerState extends State<StudentDrawer> {
             // My Progress
             ListTile(
               onTap: () {
-
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => MyProgress()));
               },
               leading: const Icon(
                 Icons.bar_chart,
@@ -123,7 +128,7 @@ class _StudentDrawerState extends State<StudentDrawer> {
             // Downloads
             ListTile(
               onTap: () {
-
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Downloads()));
               },
               leading: const Icon(
                 Icons.download,
@@ -140,7 +145,7 @@ class _StudentDrawerState extends State<StudentDrawer> {
             // Notifications
             ListTile(
               onTap: () {
-
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Notifications()));
               },
               leading: const Icon(
                 Icons.notifications,
@@ -157,7 +162,7 @@ class _StudentDrawerState extends State<StudentDrawer> {
             // Reports
             ListTile(
               onTap: () {
-
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Reports()));
               },
               leading: const Icon(
                 Icons.report_rounded,
