@@ -42,6 +42,7 @@ class CourseCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
 
+            // image card
             Container(
               width: 150,
               height: 80,
@@ -51,10 +52,12 @@ class CourseCard extends StatelessWidget {
               ),
             ),
 
+            // course details
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
 
+                // course name
                 Text(
                   courseName,
                   style: TextStyle(
@@ -64,7 +67,7 @@ class CourseCard extends StatelessWidget {
                   ),
                 ),
 
-
+                // number of students enrolled
                 Text(
                   '$studentCount Students',
                   style: TextStyle(
@@ -74,6 +77,8 @@ class CourseCard extends StatelessWidget {
                 ),
               ],
             ),
+
+            // view button
             Align(
               alignment: Alignment.center,
               child: ElevatedButton(
