@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:edureach/widgets/student_drawer.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -16,7 +17,6 @@ class _StudentProfileState extends State<StudentProfile> {
   late TextEditingController _schoolNameController;
   late TextEditingController _nationalityController;
   late TextEditingController _fullNameController;
-  late TextEditingController _specialNeedsController;
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -36,7 +36,6 @@ class _StudentProfileState extends State<StudentProfile> {
     _schoolNameController = TextEditingController();
     _nationalityController = TextEditingController();
     _fullNameController = TextEditingController();
-    _specialNeedsController = TextEditingController();
 
     // Get current user document reference
     final userId = _auth.currentUser?.uid;
@@ -60,7 +59,6 @@ class _StudentProfileState extends State<StudentProfile> {
           _schoolLevelController.text = data['schoolLevel'] ?? '';
           _schoolNameController.text = data['schoolName'] ?? '';
           _nationalityController.text = data['nationality'] ?? '';
-          _specialNeedsController.text = data['specialNeeds'] ?? '';
           _isLoading = false;
         });
       }
@@ -86,7 +84,6 @@ class _StudentProfileState extends State<StudentProfile> {
         'schoolLevel': _schoolLevelController.text,
         'schoolName': _schoolNameController.text,
         'nationality': _nationalityController.text,
-        'specialNeeds': _specialNeedsController.text,
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
@@ -116,7 +113,6 @@ class _StudentProfileState extends State<StudentProfile> {
     _schoolNameController.dispose();
     _nationalityController.dispose();
     _fullNameController.dispose();
-    _specialNeedsController.dispose();
     super.dispose();
   }
 
@@ -129,6 +125,7 @@ class _StudentProfileState extends State<StudentProfile> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Student Profile"),
+        centerTitle: true,
         actions: [
           if (_isEditing)
             IconButton(
@@ -147,6 +144,7 @@ class _StudentProfileState extends State<StudentProfile> {
           ),
         ],
       ),
+      drawer: StudentDrawer(),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -191,37 +189,26 @@ class _StudentProfileState extends State<StudentProfile> {
             ProfileInputField(
               label: "Full Name",
               controller: _fullNameController,
-              icon: Icons.edit,
               enabled: _isEditing,
             ),
             ProfileInputField(
               label: "Gender",
               controller: _genderController,
-              icon: Icons.edit,
               enabled: _isEditing,
             ),
             ProfileInputField(
               label: "School Level",
               controller: _schoolLevelController,
-              icon: Icons.edit,
               enabled: _isEditing,
             ),
             ProfileInputField(
               label: "Name of School",
               controller: _schoolNameController,
-              icon: Icons.edit,
               enabled: _isEditing,
             ),
             ProfileInputField(
               label: "Nationality",
               controller: _nationalityController,
-              icon: Icons.edit,
-              enabled: _isEditing,
-            ),
-            ProfileInputField(
-              label: "Special Needs",
-              controller: _specialNeedsController,
-              icon: Icons.edit,
               enabled: _isEditing,
             ),
           ],
@@ -234,14 +221,12 @@ class _StudentProfileState extends State<StudentProfile> {
 class ProfileInputField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
-  final IconData icon;
   final bool enabled;
 
   const ProfileInputField({
     super.key,
     required this.label,
     required this.controller,
-    required this.icon,
     this.enabled = true,
   });
 
@@ -274,7 +259,6 @@ class ProfileInputField extends StatelessWidget {
                   ),
                 ),
               ),
-              Icon(icon, color: const Color(0xFF00ADAE)),
             ],
           ),
           Divider(thickness: 1, color: Colors.grey[300]),

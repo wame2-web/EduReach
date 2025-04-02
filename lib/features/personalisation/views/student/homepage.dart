@@ -35,8 +35,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
-      drawer: StudentDrawer(),
       body: _widgetOptions[
       _selectedIndex],
 

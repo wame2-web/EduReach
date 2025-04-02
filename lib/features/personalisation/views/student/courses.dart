@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:edureach/features/personalisation/views/student/course_details.dart';
 import 'package:edureach/widgets/course_card.dart';
 import 'package:edureach/widgets/search_input_text.dart';
+import 'package:edureach/widgets/student_drawer.dart';
 import 'package:flutter/material.dart';
 
 class StudentCourses extends StatefulWidget {
@@ -31,6 +32,11 @@ class _StudentCoursesState extends State<StudentCourses>  with SingleTickerProvi
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        appBar: AppBar(
+          title: Text("Courses"),
+          centerTitle: true,
+        ),
+        drawer: StudentDrawer(),
         body: Padding(
           padding: const EdgeInsets.only(left: 16.0, right: 16.0),
           child: Column(
