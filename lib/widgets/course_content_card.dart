@@ -2,7 +2,16 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class CourseContentCard extends StatelessWidget {
-  const CourseContentCard({super.key});
+
+  final String title;
+  final int lessonNumber;
+
+
+  const CourseContentCard({
+    super.key,
+    required this.title,
+    required this.lessonNumber,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +22,8 @@ class CourseContentCard extends StatelessWidget {
 
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      padding: EdgeInsets.only(top: 10, bottom: 10,),
       decoration: BoxDecoration(
         color: const Color(0xFFB7E8E9),
         borderRadius: BorderRadius.circular(12),
@@ -31,14 +41,18 @@ class CourseContentCard extends StatelessWidget {
 
           // Lesson number
           Container(
-            margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+            padding: EdgeInsets.only(top: 15, bottom: 15, left: 20, right: 20),
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: const Color(0xFFB7E8E9),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                width: 1,
+                color: const Color(0xFF00ADAE),
+              )
             ),
             child: Text(
-              "1",
+              "$lessonNumber",
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
@@ -47,18 +61,31 @@ class CourseContentCard extends StatelessWidget {
           ),
 
           // Lesson pdf name
-          Text(
-            "Lesson_1_paper.pdf",
+          Center(
+            child: Column(
+              children: [
+                Text(
+                  title.length > 24 ? "${title.substring(0, 24)}..." : title,
+                  style: TextStyle(
+                    fontSize: 16,
+                  ),
+                ),
+
+              ],
+            ),
           ),
 
+
+
           // View pdf
-          Icon(
-              CupertinoIcons.eye,
-          ),
+          // Icon(
+          //     CupertinoIcons.eye,
+          // ),
 
           // Download pdf
           Icon(
             Icons.download,
+            color: const Color(0xFF00ADAE),
           ),
 
         ],
