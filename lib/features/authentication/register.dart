@@ -28,7 +28,6 @@ class _RegisterState extends State<Register> {
   String? selectedGender;
   String? selectedSchoolLevel;
   String? selectedNationality;
-  String? selectedSpecialNeeds;
 
   bool isChecked = false;
   bool obscurePassword = true;
@@ -80,7 +79,6 @@ class _RegisterState extends State<Register> {
           'schoolLevel': selectedSchoolLevel,
           'schoolName': schoolNameController.text.trim(),
           'nationality': selectedNationality,
-          'specialNeeds': selectedSpecialNeeds,
           'role': "student",
           'createdAt': FieldValue.serverTimestamp(),
         });
@@ -299,36 +297,6 @@ class _RegisterState extends State<Register> {
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please select your nationality';
-                    }
-                    return null;
-                  },
-                ),
-
-                const SizedBox(height: 15),
-
-                // Special Needs Dropdown
-                DropdownButtonFormField<String>(
-                  value: selectedSpecialNeeds,
-                  decoration: InputDecoration(
-                    labelText: "Special Needs?",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20.0),
-                    ),
-                  ),
-                  items: ['None', 'Visual', 'Hearing', 'Mobility', 'Other']
-                      .map((need) => DropdownMenuItem(
-                            value: need,
-                            child: Text(need),
-                          ))
-                      .toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      selectedSpecialNeeds = value;
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please select an option';
                     }
                     return null;
                   },
