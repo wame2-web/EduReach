@@ -1,4 +1,5 @@
 import 'package:edureach/widgets/course_content_card.dart';
+import 'package:edureach/widgets/quizzes_card.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -274,10 +275,9 @@ class _CourseDetailsState extends State<CourseDetails> with SingleTickerProvider
       itemCount: quizzes.length,
       itemBuilder: (context, index) {
         final quiz = quizzes[index].data() as Map<String, dynamic>;
-        return ListTile(
-          title: Text(quiz['title'] ?? 'No Title'),
-          subtitle: Text(quiz['description'] ?? 'No Description'),
-          trailing: Text("${quiz['quizTime'] ?? '?'} min"),
+        return QuizzesCard(
+          title: quiz['title'] ?? 'No Title',
+          quizTime: quiz['quizTime'],
         );
       },
     );
