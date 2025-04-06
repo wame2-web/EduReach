@@ -75,6 +75,7 @@ class _StudentProfileState extends State<StudentProfile> {
     }
   }
 
+  // Update User details
   Future<void> _saveUserData() async {
     try {
       setState(() => _isSaving = true);
@@ -209,8 +210,8 @@ class _StudentProfileState extends State<StudentProfile> {
           ],
         ),
         borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
+          bottomLeft: Radius.circular(0),
+          bottomRight: Radius.circular(0),
         ),
       ),
       child: Column(
@@ -297,7 +298,8 @@ class _StudentProfileState extends State<StudentProfile> {
 
   Widget _buildProfileCard(ThemeData theme, bool isDarkMode) {
     return Card(
-      elevation: 5,
+      elevation: 0,
+      color: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15),
       ),
