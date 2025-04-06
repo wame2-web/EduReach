@@ -1,8 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:edureach/features/personalisation/views/student/courses.dart';
 import 'package:edureach/widgets/course_card.dart';
 import 'package:edureach/widgets/search_input_text.dart';
 import 'package:edureach/widgets/student_drawer.dart';
 import 'package:flutter/material.dart';
+import 'flashcards.dart';
+
+import 'quiz.dart';
 
 class StudentContent extends StatefulWidget {
   const StudentContent({super.key});
@@ -63,6 +67,7 @@ class _StudentContentState extends State<StudentContent> {
 
               const SizedBox(height: 12),
 
+              // In-Progress Content
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -92,7 +97,9 @@ class _StudentContentState extends State<StudentContent> {
                     ),
                     const SizedBox(height: 8),
                     ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context)=> StudentCourses()));
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: theme.colorScheme.primary,
                         shape: RoundedRectangleBorder(
@@ -118,6 +125,7 @@ class _StudentContentState extends State<StudentContent> {
 
               const SizedBox(height: 12),
 
+              // Quick Access Content - Quizzes, Exams, Flashcards
               SizedBox(
                 height: 100,
                 child: ListView(
@@ -125,16 +133,24 @@ class _StudentContentState extends State<StudentContent> {
                   physics: const BouncingScrollPhysics(),
                   children: [
                     _buildQuickAccessItem(
-                        Icons.quiz, "Quizzes", theme.colorScheme.secondary),
+                        Icons.quiz,
+                        "Quizzes",
+                        theme.colorScheme.secondary,
+                        () => Navigator.push(context, MaterialPageRoute(builder: (context) => QuizzesView()))
+                    ),
                     const SizedBox(width: 12),
                     _buildQuickAccessItem(
-                        Icons.assignment, "Exams", Colors.purple),
+                        Icons.assignment, "Exams", Colors.purple, null),
                     const SizedBox(width: 12),
                     _buildQuickAccessItem(
-                        Icons.library_books, "Flashcards", Colors.orange),
+                        Icons.library_books,
+                        "Flashcards",
+                        Colors.orange,
+                        () => Navigator.push(context, MaterialPageRoute(builder: (context)=> FlashcardsView()))
+                    ),
                     const SizedBox(width: 12),
                     _buildQuickAccessItem(
-                        Icons.video_library, "Videos", Colors.blue),
+                        Icons.video_library, "Videos", Colors.blue, null),
                   ],
                 ),
               ),
@@ -258,34 +274,37 @@ class _StudentContentState extends State<StudentContent> {
     );
   }
 
-  Widget _buildQuickAccessItem(IconData icon, String label, Color color) {
-    return Container(
-      width: 100,
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
-              shape: BoxShape.circle,
+  Widget _buildQuickAccessItem(IconData icon, String label, Color color, Function()? onPressed) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: 100,
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
-            child: Icon(icon, color: color),
-          ),
-          const SizedBox(height: 8),
-          Text(label, style: Theme.of(context).textTheme.bodySmall),
-        ],
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color),
+            ),
+            const SizedBox(height: 8),
+            Text(label, style: Theme.of(context).textTheme.bodySmall),
+          ],
+        ),
       ),
     );
   }
