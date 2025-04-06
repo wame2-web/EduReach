@@ -140,7 +140,7 @@ class _FlashcardsViewState extends State<FlashcardsView> {
             ),
         ],
       ),
-      // drawer: const StudentDrawer(),
+      drawer: const StudentDrawer(),
       body: Column(
         children: [
           // Course Selection Dropdown
