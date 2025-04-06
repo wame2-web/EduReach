@@ -12,264 +12,304 @@ class StudentContent extends StatefulWidget {
 }
 
 class _StudentContentState extends State<StudentContent> {
-
   final TextEditingController _searchController = TextEditingController();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String _searchQuery = '';
+  final PageController _pageController = PageController(viewportFraction: 0.8);
 
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-
-    // Get Device Screen Size
-    final double screenSizeWidth = MediaQuery.of(context).size.width;
-    final double screenSizeHeight = MediaQuery.of(context).size.height;
+    final theme = Theme.of(context);
+    final screenSize = MediaQuery.of(context).size;
 
     return Scaffold(
       appBar: AppBar(
-
+        title: Text('My Learning',
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onBackground,
+            )),
+        elevation: 0,
+        backgroundColor: theme.scaffoldBackgroundColor,
       ),
-      drawer: StudentDrawer(),
-      body: Padding(
-        padding: const EdgeInsets.only(left: 16.0, right: 16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      drawer: const StudentDrawer(),
+      body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 16),
 
-            const SizedBox(height: 16),
-
-            // Search Input
-            SearchTextField(
-              controller: _searchController,
-              hintText: 'Search courses...',
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value.toLowerCase();
-                });
-              },
-            ),
-
-            const SizedBox(height: 16),
-
-            // In Progress container text
-            Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-
-                // In progress text
-                Text(
-                  "In Progress",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-                const SizedBox(height: 5),
-
-                // Enroll in courses text
-                Container(
-                  width: screenSizeWidth ,
-                  height: screenSizeHeight * 0.05,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 6,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Text(
-                    "Enroll in courses to keep track of your progress.",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade700
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 10),
-
-            // Assessments text
-            Text(
-              "Assessments",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+              // Search Bar with improved styling
+              SearchTextField(
+                controller: _searchController,
+                hintText: 'Search courses, topics...',
+                onChanged: (value) =>
+                    setState(() => _searchQuery = value.toLowerCase()),
               ),
-            ),
 
-            SizedBox(height: 5,),
+              const SizedBox(height: 24),
 
-            // Quiz, Exams,
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
+              // In Progress Section
+              _buildSectionHeader("In Progress", "View all", () {}),
 
-                // Quiz
-                Container(
-                  width: screenSizeWidth * 0.25,
-                  height: screenSizeHeight * 0.15,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 6,
-                        offset: const Offset(0, 3),
-                      ),
+              const SizedBox(height: 12),
+
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      theme.colorScheme.primary.withOpacity(0.05),
+                      theme.colorScheme.primary.withOpacity(0.15),
                     ],
                   ),
-
-                  child: Text("Quiz"),
                 ),
-
-                // Exams
-                Container(
-                  width: screenSizeWidth * 0.25,
-                  height: screenSizeHeight * 0.15,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 6,
-                        offset: const Offset(0, 3),
+                child: Column(
+                  children: [
+                    Icon(Icons.school,
+                        size: 40, color: theme.colorScheme.primary),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Enroll in courses to track your progress",
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: theme.colorScheme.onSurface.withOpacity(0.8),
                       ),
-                    ],
-                  ),
-
-                  child: Text("Exams"),
-                ),
-
-                // Flashcards
-                Container(
-                  width: screenSizeWidth * 0.25,
-                  height: screenSizeHeight * 0.15,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 6,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-
-                  child: Text("Flashcards"),
-                ),
-
-              ],
-            ),
-
-            const SizedBox(height: 10),
-
-            // My Courses text
-            Text(
-                "My Courses",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-
-            SizedBox(height: 5,),
-
-            // Courses Grid
-            Expanded(
-              child: StreamBuilder<QuerySnapshot>(
-                stream: _firestore.collection('courses').snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  }
-
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  // Filter courses based on search query
-                  final courses = snapshot.data!.docs.where((doc) {
-                    final data = doc.data() as Map<String, dynamic>;
-                    final title = data['title']?.toString().toLowerCase() ?? '';
-                    return title.contains(_searchQuery);
-                  }).toList();
-
-                  if (courses.isEmpty) {
-                    return const Center(child: Text('No courses found'));
-                  }
-
-                  // List of courses
-                  return GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2, // Two columns
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 0.7, // Adjust card aspect ratio
+                      textAlign: TextAlign.center,
                     ),
-                    itemCount: courses.length,
-                    itemBuilder: (context, index) {
-                      final course = courses[index];
-                      final data = course.data() as Map<String, dynamic>;
-                      final studentCount = (data['userID'] as List?)?.length ?? 0;
+                    const SizedBox(height: 8),
+                    ElevatedButton(
+                      onPressed: () {},
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.colorScheme.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 12),
+                      ),
+                      child: Text("Browse Courses",
+                          style: TextStyle(
+                            color: theme.colorScheme.onPrimary,
+                            fontWeight: FontWeight.bold,
+                          )),
+                    ),
+                  ],
+                ),
+              ),
 
-                      // Define colors based on category
-                      final (cardColor, textColor) = _getCourseColors(data['category']);
+              const SizedBox(height: 28),
 
-                      return CourseCard(
-                        courseName: data['title'] ?? 'Untitled Course',
-                        studentCount: studentCount,
-                        onViewPressed: () => _viewCourseDetails(course.id),
-                        containerColor: cardColor,
-                        textColor: textColor,
+              // Assessments Section
+              _buildSectionHeader("Quick Access", null, null),
+
+              const SizedBox(height: 12),
+
+              SizedBox(
+                height: 100,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  children: [
+                    _buildQuickAccessItem(
+                        Icons.quiz, "Quizzes", theme.colorScheme.secondary),
+                    const SizedBox(width: 12),
+                    _buildQuickAccessItem(
+                        Icons.assignment, "Exams", Colors.purple),
+                    const SizedBox(width: 12),
+                    _buildQuickAccessItem(
+                        Icons.library_books, "Flashcards", Colors.orange),
+                    const SizedBox(width: 12),
+                    _buildQuickAccessItem(
+                        Icons.video_library, "Videos", Colors.blue),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 28),
+
+              // My Courses Section
+              _buildSectionHeader("My Courses", "See all", () {}),
+
+              const SizedBox(height: 12),
+
+              // Enhanced Carousel with PageView
+              SizedBox(
+                height: 220,
+                child: StreamBuilder<QuerySnapshot>(
+                  stream: _firestore.collection('courses').snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    }
+
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    final courses = snapshot.data!.docs.where((doc) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      final title =
+                          data['title']?.toString().toLowerCase() ?? '';
+                      return title.contains(_searchQuery);
+                    }).toList();
+
+                    if (courses.isEmpty) {
+                      return Center(
+                        child: Text(
+                          'No courses found',
+                          style: theme.textTheme.bodyLarge,
+                        ),
                       );
-                    },
-                  );
-                },
-              ),
-            ),
+                    }
 
-          ],
+                    return PageView.builder(
+                      controller: _pageController,
+                      itemCount: courses.length,
+                      physics: const BouncingScrollPhysics(),
+                      padEnds: false,
+                      itemBuilder: (context, index) {
+                        final course = courses[index];
+                        final data = course.data() as Map<String, dynamic>;
+                        final studentCount =
+                            (data['userID'] as List?)?.length ?? 0;
+                        final colors = _getCourseColors(data['category']);
+
+                        return AnimatedBuilder(
+                          animation: _pageController,
+                          builder: (context, child) {
+                            double value = 1.0;
+                            if (_pageController.position.haveDimensions) {
+                              value = _pageController.page! - index;
+                              value = (1 - (value.abs() * 0.2)).clamp(0.8, 1.0);
+                            }
+
+                            return Transform.scale(
+                              scale: value,
+                              child: child,
+                            );
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 8),
+                            child: CourseCard(
+                              courseName: data['title'] ?? 'Untitled Course',
+                              studentCount: studentCount,
+                              onViewPressed: () =>
+                                  _viewCourseDetails(course.id),
+                              containerColor: colors.$1,
+                              textColor: colors.$2,
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 32),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  // Helper function to get colors based on course category
+  Widget _buildSectionHeader(
+      String title, String? actionText, VoidCallback? onAction) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        if (actionText != null)
+          TextButton(
+            onPressed: onAction,
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: Text(
+              actionText,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildQuickAccessItem(IconData icon, String label, Color color) {
+    return Container(
+      width: 100,
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color),
+          ),
+          const SizedBox(height: 8),
+          Text(label, style: Theme.of(context).textTheme.bodySmall),
+        ],
+      ),
+    );
+  }
+
   (Color, Color) _getCourseColors(String? category) {
     switch (category?.toLowerCase()) {
       case 'science':
         return (const Color(0xFF00ADAE), Colors.white);
       case 'mathematics':
-        return (Colors.green, Colors.white);
+        return (const Color(0xFF4CAF50), Colors.white);
       case 'technology':
-        return (Colors.purple, Colors.white);
+        return (const Color(0xFF9C27B0), Colors.white);
       case 'humanities':
-        return (Colors.orange, Colors.black);
+        return (const Color(0xFFFF9800), Colors.black);
+      case 'language':
+        return (const Color(0xFF2196F3), Colors.white);
+      case 'business':
+        return (const Color(0xFF607D8B), Colors.white);
       default:
-        return (Colors.blueGrey, Colors.white);
+        return (Theme.of(context).colorScheme.primary, Colors.white);
     }
   }
 
   void _viewCourseDetails(String courseId) {
-    // Navigate to course details screen
     Navigator.pushNamed(context, '/course-details', arguments: courseId);
   }
 }
