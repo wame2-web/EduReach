@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:edureach/features/authentication/login.dart';
 import 'package:edureach/widgets/student_drawer.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class StudentProfile extends StatefulWidget {
   const StudentProfile({super.key});
@@ -24,26 +26,31 @@ class _StudentProfileState extends State<StudentProfile> {
 
   bool _isEditing = false;
   bool _isLoading = true;
+  bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
+    _initializeControllers();
+    _initializeUserData();
+  }
 
-    // Initialize TextEditingControllers
+  void _initializeControllers() {
     _genderController = TextEditingController();
     _emailController = TextEditingController();
     _schoolLevelController = TextEditingController();
     _schoolNameController = TextEditingController();
     _nationalityController = TextEditingController();
     _fullNameController = TextEditingController();
+  }
 
-    // Get current user document reference
+  void _initializeUserData() {
     final userId = _auth.currentUser?.uid;
     if (userId != null) {
       _userDocRef = _firestore.collection('users').doc(userId);
       _loadUserData();
     } else {
-      _isLoading = false;
+      setState(() => _isLoading = false);
     }
   }
 
@@ -63,21 +70,14 @@ class _StudentProfileState extends State<StudentProfile> {
         });
       }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading user data: $e')),
-      );
+      _showErrorSnackbar('Error loading user data: $e');
+      setState(() => _isLoading = false);
     }
   }
 
   Future<void> _saveUserData() async {
     try {
-      setState(() {
-        _isLoading = true;
-      });
-
+      setState(() => _isSaving = true);
       await _userDocRef.update({
         'fullName': _fullNameController.text,
         'gender': _genderController.text,
@@ -86,23 +86,41 @@ class _StudentProfileState extends State<StudentProfile> {
         'nationality': _nationalityController.text,
         'updatedAt': FieldValue.serverTimestamp(),
       });
-
       setState(() {
         _isEditing = false;
-        _isLoading = false;
+        _isSaving = false;
       });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile updated successfully!')),
-      );
+      _showSuccessSnackbar('Profile updated successfully!');
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating profile: $e')),
-      );
+      _showErrorSnackbar('Error updating profile: $e');
+      setState(() => _isSaving = false);
     }
+  }
+
+  void _showSuccessSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+    );
+  }
+
+  void _showErrorSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+    );
   }
 
   @override
@@ -118,151 +136,290 @@ class _StudentProfileState extends State<StudentProfile> {
 
   @override
   Widget build(BuildContext context) {
-    // Get Device Screen Size
-    final double screenSizeWidth = MediaQuery.of(context).size.width;
-    final double screenSizeHeight = MediaQuery.of(context).size.height;
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Student Profile"),
+        title: const Text("My Profile"),
         centerTitle: true,
+        elevation: 0,
         actions: [
           if (_isEditing)
             IconButton(
-              icon: const Icon(Icons.save),
-              onPressed: _isLoading ? null : _saveUserData,
+              icon: _isSaving
+                  ? const CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation(Colors.white),
+              )
+                  : const Icon(Icons.save_rounded),
+              onPressed: _isSaving ? null : _saveUserData,
             ),
           IconButton(
-            icon: Icon(_isEditing ? Icons.cancel : Icons.edit),
-            onPressed: _isLoading
+            icon: Icon(
+              _isEditing ? Icons.close_rounded : Icons.edit_rounded,
+              color: _isLoading ? Colors.grey : theme.colorScheme.primary,
+            ),
+            onPressed: _isLoading || _isSaving
                 ? null
-                : () {
-              setState(() {
-                _isEditing = !_isEditing;
-              });
-            },
+                : () => setState(() => _isEditing = !_isEditing),
           ),
         ],
       ),
-      drawer: StudentDrawer(),
+      drawer: const StudentDrawer(),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.only(bottom: 20),
         child: Column(
           children: [
-            // User Image
-            Container(
-              width: screenSizeWidth,
-              height: screenSizeHeight * 0.4,
-              alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                color: Color(0xFFB7E8E9),
-              ),
+            // Profile Header
+            _buildProfileHeader(theme),
+
+            // Profile Details
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // user photo
-                  const CircleAvatar(
-                    backgroundColor: Colors.black,
-                    radius: 80,
-                    // backgroundImage: AssetImage("assets/user_avatar.jpeg"),
-                  ),
-                  // User Name
-                  Text(
-                    _fullNameController.text,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                    ),
-                  ),
-                  Text(
-                    _emailController.text,
-                    style: const TextStyle(
-                      fontSize: 16,
-                    ),
-                  ),
+                  const SizedBox(height: 20),
+                  _buildProfileCard(theme, isDarkMode),
+                  const SizedBox(height: 30),
+                  _buildLogoutButton(theme),
                 ],
               ),
-            ),
-            const SizedBox(height: 16),
-            // User Details
-            ProfileInputField(
-              label: "Full Name",
-              controller: _fullNameController,
-              enabled: _isEditing,
-            ),
-            ProfileInputField(
-              label: "Gender",
-              controller: _genderController,
-              enabled: _isEditing,
-            ),
-            ProfileInputField(
-              label: "School Level",
-              controller: _schoolLevelController,
-              enabled: _isEditing,
-            ),
-            ProfileInputField(
-              label: "Name of School",
-              controller: _schoolNameController,
-              enabled: _isEditing,
-            ),
-            ProfileInputField(
-              label: "Nationality",
-              controller: _nationalityController,
-              enabled: _isEditing,
             ),
           ],
         ),
       ),
     );
   }
-}
 
-class ProfileInputField extends StatelessWidget {
-  final String label;
-  final TextEditingController controller;
-  final bool enabled;
-
-  const ProfileInputField({
-    super.key,
-    required this.label,
-    required this.controller,
-    this.enabled = true,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 10, bottom: 10),
+  Widget _buildProfileHeader(ThemeData theme) {
+    return Container(
+      height: 220,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            theme.colorScheme.primary,
+            theme.colorScheme.primary.withOpacity(0.8),
+          ],
+        ),
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(30),
+          bottomRight: Radius.circular(30),
+        ),
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          if (label.isNotEmpty)
-            Text(
-              label,
-              style: const TextStyle(fontSize: 14, color: Colors.black),
-            ),
-          const SizedBox(height: 4),
-          Row(
+          Stack(
+            alignment: Alignment.bottomRight,
             children: [
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  enabled: enabled,
-                  cursorColor: const Color(0xFF00ADAE),
-                  decoration: InputDecoration(
-                    hintText: label,
-                    hintStyle: const TextStyle(
-                      color: Colors.grey,
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white,
+                    width: 3,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      spreadRadius: 2,
                     ),
-                    border: InputBorder.none,
+                  ],
+                ),
+                child: ClipOval(
+                  child: _auth.currentUser?.photoURL != null
+                      ? Image.network(
+                    _auth.currentUser!.photoURL!,
+                    fit: BoxFit.cover,
+                  )
+                      : Icon(
+                    Icons.person,
+                    size: 60,
+                    color: theme.colorScheme.onPrimary.withOpacity(0.8),
                   ),
                 ),
               ),
+              if (_isEditing)
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.secondary,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white,
+                      width: 2,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.camera_alt,
+                    size: 20,
+                    color: Colors.white,
+                  ),
+                ),
             ],
           ),
-          Divider(thickness: 1, color: Colors.grey[300]),
+          const SizedBox(height: 15),
+          Text(
+            _fullNameController.text,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              shadows: [
+                Shadow(
+                  blurRadius: 10,
+                  color: Colors.black.withOpacity(0.2),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            _emailController.text,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.white.withOpacity(0.9),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildProfileCard(ThemeData theme, bool isDarkMode) {
+    return Card(
+      elevation: 5,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            _buildProfileField(
+              "Full Name",
+              Icons.person_outline,
+              _fullNameController,
+              theme,
+            ),
+            const SizedBox(height: 15),
+            _buildProfileField(
+              "Gender",
+              Icons.transgender,
+              _genderController,
+              theme,
+            ),
+            const SizedBox(height: 15),
+            _buildProfileField(
+              "School Level",
+              Icons.school_outlined,
+              _schoolLevelController,
+              theme,
+            ),
+            const SizedBox(height: 15),
+            _buildProfileField(
+              "School Name",
+              Icons.location_city_outlined,
+              _schoolNameController,
+              theme,
+            ),
+            const SizedBox(height: 15),
+            _buildProfileField(
+              "Nationality",
+              Icons.flag_outlined,
+              _nationalityController,
+              theme,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileField(
+      String label,
+      IconData icon,
+      TextEditingController controller,
+      ThemeData theme,
+      ) {
+    return TextFormField(
+      controller: controller,
+      enabled: _isEditing,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: theme.colorScheme.primary),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(
+            color: _isEditing
+                ? theme.colorScheme.primary
+                : Colors.grey.withOpacity(0.5),
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(
+            color: _isEditing
+                ? theme.colorScheme.primary
+                : Colors.grey.withOpacity(0.5),
+          ),
+        ),
+        filled: !_isEditing,
+        fillColor: Colors.grey.withOpacity(0.05),
+        contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+      ),
+      style: TextStyle(
+        color: _isEditing ? theme.colorScheme.onSurface : Colors.grey[700],
+        fontWeight: FontWeight.w500,
+      ),
+    );
+  }
+
+  Widget _buildLogoutButton(ThemeData theme) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: () async {
+          await _auth.signOut();
+          if (!mounted) return;
+          await FirebaseAuth.instance.signOut();
+
+          if(mounted) {
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (BuildContext context) => Login()));
+          }
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: theme.colorScheme.error,
+          padding: const EdgeInsets.symmetric(vertical: 15),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          elevation: 3,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.logout, color: Colors.white),
+            const SizedBox(width: 10),
+            Text(
+              "Logout",
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
