@@ -131,7 +131,7 @@ class _LoginState extends State<Login> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                   // Logo/App Name
-                  const FlutterLogo(size: 100),
+                  // const FlutterLogo(size: 100),
               const SizedBox(height: 20),
               Text(
                 "EduReach",

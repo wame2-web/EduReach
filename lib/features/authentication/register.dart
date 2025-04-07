@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'login.dart';
 
@@ -133,7 +132,7 @@ class _RegisterState extends State<Register> {
               Colors.grey[850]!,
             ]
                 : [
-              theme.colorScheme.primary.withOpacity(0.1),
+              theme.colorScheme.primary.withOpacity(0.05),
               Colors.white,
             ],
           ),
@@ -146,7 +145,7 @@ class _RegisterState extends State<Register> {
               child: Column(
                 children: [
                   // Logo/App Name
-                  const FlutterLogo(size: 80),
+                  // const FlutterLogo(size: 80),
                   const SizedBox(height: 16),
                   Text(
                     "Create Account",
