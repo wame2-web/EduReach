@@ -63,7 +63,7 @@ class _RegisterState extends State<Register> {
         'nationality': selectedNationality,
         'role': "student",
         'createdAt': FieldValue.serverTimestamp(),
-        'userID': userCredential.user!.uid,
+        // 'userID': userCredential.user!.uid,
       });
 
       if (!mounted) return;
@@ -253,11 +253,7 @@ class _RegisterState extends State<Register> {
                       fillColor: isDarkMode ? Colors.grey[800] : Colors.white,
                     ),
                     items: [
-                      'Primary School',
                       'Secondary School',
-                      'High School',
-                      'University',
-                      'Other'
                     ].map((level) => DropdownMenuItem(
                       value: level,
                       child: Text(level),
