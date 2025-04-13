@@ -1,0 +1,84 @@
+E-Learning Platform Database Structure
+│
+├── collections/
+│   ├── courses/ (main collection)
+│   │   ├── documents: [AnExUF398mNML19yPdkr, NMxpURLBqhMkcQpTIBba, ...]
+│   │   ├── fields:
+│   │   │   ├── category: "Science"
+│   │   │   ├── createdAt: Date
+│   │   │   ├── description: String
+│   │   │   ├── duration: String
+│   │   │   ├── title: String
+│   │   │   └── updatedAt: Date
+│   │   │
+│   │   └── flashcards/ (sub-collection)
+│   │       ├── documents: [301s6KfJ7N5XmMept4XU, 7PC9dJ6TYv9KfppdTA4c1, ...]
+│   │       └── fields:
+│   │           ├── backText: String
+│   │           ├── difficulty: String
+│   │           ├── frontText: String
+│   │           ├── lastReviewed: Date
+│   │           └── tags: Array
+│   │
+│   ├── lessons/ (main collection)
+│   │   ├── fields:
+│   │   │   ├── courseID: String (reference to courses)
+│   │   │   ├── order: Number
+│   │   │   ├── pdfURL: String
+│   │   │   ├── textContent: String
+│   │   │   ├── title: String
+│   │   │   ├── videoURL: String
+│   │   │   ├── createdAt: Date
+│   │   │   └── updatedAt: Date
+│   │   └── documents: [MERLknqLzxoD1321qQ5p, ny8op6g8pi7k35N9VxWd, ...]
+│   │
+│   ├── quizzes/ (main collection)
+│   │   ├── documents: [8U1adjKLN0XecnovBWRJ, C6eqZyd0D1CiP81OWBP8, ...]
+│   │   ├── fields:
+│   │   │   ├── courseID: String (reference to courses)
+│   │   │   ├── description: String
+│   │   │   ├── quizTime: Number
+│   │   │   ├── title: String
+│   │   │   ├── createdAt: Date
+│   │   │   └── updatedAt: Date
+│   │   │
+│   │   └── questions/ (sub-collection)
+│   │       ├── documents: [e0dUq2YJKTxmSWTDu1ru, ...]
+│   │       └── fields:
+│   │           ├── correctAnswer: String
+│   │           ├── options: Array
+│   │           ├── points: Number
+│   │           ├── questionText: String
+│   │           ├── createdAt: Date
+│   │           └── updatedAt: Date
+│   │
+│   ├── lesson_progress/ (main collection)
+│   │   ├── fields:
+│   │   │   ├── completedAt: Date
+│   │   │   ├── courseID: String
+│   │   │   ├── isCompleted: Boolean
+│   │   │   ├── lessonID: String
+│   │   │   └── userID: String
+│   │   └── documents: [89hZVC024g11ZH27m4pS, s6c12dJ7J9ar59CLzbSm, ...]
+│   │
+│   └── users/ (main collection)
+│       ├── documents: [AHS#iTbzthJTRHJ6SimmBDyg2Gcy2, DH7CUH6SrvWtgfDoeZ5PlotKxAWZ, ...]
+│       └── fields:
+│           ├── email: String
+│           ├── fullName: String
+│           ├── gender: String
+│           ├── nationality: String
+│           ├── role: String
+│           ├── schoolLevel: String
+│           ├── schoolName: String
+│           ├── specialNeeds: String
+│           ├── createdAt: Date
+│           └── updatedAt: Date
+│
+└── relationships:
+    ├── Users (1) → (many) Courses
+    ├── Courses (1) → (many) Lessons
+    ├── Courses (1) → (many) Quizzes
+    ├── Courses (1) → (many) Flashcards (as sub-collection)
+    ├── Quizzes (1) → (many) Questions (as sub-collection)
+    └── Users (1) → (many) Lesson Progress records
