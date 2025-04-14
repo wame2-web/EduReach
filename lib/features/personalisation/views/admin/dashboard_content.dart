@@ -1,3 +1,5 @@
+import 'package:edureach/features/personalisation/views/admin/manage_courses.dart';
+import 'package:edureach/features/personalisation/views/admin/manage_users.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:edureach/widgets/stats_card.dart';
@@ -161,9 +163,11 @@ class _DashboardContentState extends State<DashboardContent> {
             children: [
               _buildQuickActionButton('Manage Courses', Icons.library_add, Colors.blue, () {
                 // Navigate to add course screen
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ManageCourses()));
               }),
               _buildQuickActionButton('Manage Users', Icons.people, Colors.green, () {
                 // Navigate to manage users screen
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ManageUsers()));
               }),
               // _buildQuickActionButton('View Reports', Icons.analytics, Colors.orange, () {
               //   // Navigate to reports screen
