@@ -45,7 +45,7 @@ class CourseCard extends StatelessWidget {
             // image card
             Container(
               width: 150,
-              height: 80,
+              height: 60,
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(5),
