@@ -14,13 +14,26 @@ class ManageUsers extends StatefulWidget {
   State<ManageUsers> createState() => _ManageUsersState();
 }
 
-class _ManageUsersState extends State<ManageUsers> {
+class _ManageUsersState extends State<ManageUsers> with SingleTickerProviderStateMixin {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   bool _isDeleting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   void _showLoadingIndicator(BuildContext context) {
     showDialog(
@@ -78,6 +91,113 @@ class _ManageUsersState extends State<ManageUsers> {
     }
   }
 
+  Widget _buildUserList(String role) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _firestore.collection('users').where('role', isEqualTo: role).snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  FeatherIcons.alertCircle,
+                  size: 48,
+                  color: Colors.red[300],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Error loading ${role}s',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(
+            child: LoadingAnimationWidget.flickr(
+              leftDotColor: Theme.of(context).primaryColor,
+              rightDotColor: Colors.grey[400]!,
+              size: 100,
+            ),
+          );
+        }
+
+        final filteredDocs = snapshot.data!.docs.where((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          final name = data['fullName']?.toString().toLowerCase() ?? '';
+          final email = data['email']?.toString().toLowerCase() ?? '';
+          return name.contains(_searchQuery) || email.contains(_searchQuery);
+        }).toList();
+
+        if (filteredDocs.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  FeatherIcons.users,
+                  size: 48,
+                  color: Colors.grey[400],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  _searchQuery.isEmpty
+                      ? 'No ${role}s found'
+                      : 'No matching ${role}s',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return AnimatedList(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          initialItemCount: filteredDocs.length,
+          itemBuilder: (context, index, animation) {
+            final document = filteredDocs[index];
+            final data = document.data() as Map<String, dynamic>;
+
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.5),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutQuart,
+              )),
+              child: FadeTransition(
+                opacity: animation,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: UserCard(
+                    userId: document.id,
+                    displayName: data['fullName'] ?? 'No Name',
+                    userRole: data['role']?.toString().toUpperCase() ?? 'N/A',
+                    // email: data['email'] ?? 'No email',
+                    photoUrl: data['photoUrl'],
+                    onTap: () => _showUserDetails(context, document.id, data),
+                    // onDelete: () => _showDeleteConfirmation(context, document.id, data['fullName']),
+                    cardColor: Colors.white,
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -94,6 +214,16 @@ class _ManageUsersState extends State<ManageUsers> {
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: Theme.of(context).primaryColor,
+        bottom: TabBar(
+          controller: _tabController,
+          labelColor: Theme.of(context).primaryColor,
+          unselectedLabelColor: Colors.grey,
+          indicatorColor: Theme.of(context).primaryColor,
+          tabs: const [
+            Tab(text: 'Admins', icon: Icon(FeatherIcons.shield)),
+            Tab(text: 'Students', icon: Icon(FeatherIcons.users)),
+          ],
+        ),
       ),
       drawer: const AdminDrawer(),
       body: Column(
@@ -118,112 +248,12 @@ class _ManageUsersState extends State<ManageUsers> {
           ),
           const SizedBox(height: 8),
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: _firestore.collection('users').snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          FeatherIcons.alertCircle,
-                          size: 48,
-                          color: Colors.red[300],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Error loading users',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(
-                    child: LoadingAnimationWidget.flickr(
-                      leftDotColor: Theme.of(context).primaryColor,
-                      rightDotColor: Colors.grey[400]!,
-                      size: 100,
-                    ),
-                  );
-                }
-
-                final filteredDocs = snapshot.data!.docs.where((doc) {
-                  final data = doc.data() as Map<String, dynamic>;
-                  final name = data['fullName']?.toString().toLowerCase() ?? '';
-                  final email = data['email']?.toString().toLowerCase() ?? '';
-                  final role = data['role']?.toString().toLowerCase() ?? '';
-                  return name.contains(_searchQuery) ||
-                      email.contains(_searchQuery) ||
-                      role.contains(_searchQuery);
-                }).toList();
-
-                if (filteredDocs.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          FeatherIcons.users,
-                          size: 48,
-                          color: Colors.grey[400],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          _searchQuery.isEmpty
-                              ? 'No users found'
-                              : 'No matching users',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                return AnimatedList(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  initialItemCount: filteredDocs.length,
-                  itemBuilder: (context, index, animation) {
-                    final document = filteredDocs[index];
-                    final data = document.data() as Map<String, dynamic>;
-
-                    return SlideTransition(
-                      position: Tween<Offset>(
-                        begin: const Offset(0, 0.5),
-                        end: Offset.zero,
-                      ).animate(CurvedAnimation(
-                        parent: animation,
-                        curve: Curves.easeOutQuart,
-                      )),
-                      child: FadeTransition(
-                        opacity: animation,
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: UserCard(
-                            userId: document.id,
-                            displayName: data['fullName'] ?? 'No Name',
-                            userRole: data['role']?.toString().toUpperCase() ?? 'N/A',
-                            // email: data['email'] ?? 'No email',
-                            photoUrl: data['photoUrl'],
-                            onTap: () => _showUserDetails(context, document.id, data),
-                            // onDelete: () => _showDeleteConfirmation(context, document.id, data['fullName']),
-                            cardColor: Colors.white,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildUserList('admin'),
+                _buildUserList('student'),
+              ],
             ),
           ),
         ],
@@ -387,7 +417,6 @@ class _ManageUsersState extends State<ManageUsers> {
                       ),
                     ),
                     onPressed: () {
-                      // TODO: Implement edit functionality
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Edit feature coming soon!')),
