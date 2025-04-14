@@ -1,3 +1,4 @@
+import 'package:edureach/widgets/admin_drawer.dart';
 import 'package:edureach/widgets/search_input_text.dart';
 import 'package:edureach/widgets/user_card.dart';
 import 'package:flutter/material.dart';
@@ -57,6 +58,11 @@ class _ManageUsersState extends State<ManageUsers> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: Text("Manage Users"),
+        centerTitle: true,
+      ),
+      drawer: AdminDrawer(),
       body: Column(
         children: [
 

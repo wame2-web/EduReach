@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:edureach/widgets/admin_drawer.dart';
 import 'package:edureach/widgets/course_card.dart';
 import 'package:edureach/widgets/search_input_text.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +24,11 @@ class _ManageCoursesState extends State<ManageCourses> {
     final double screenSizeHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
+      appBar: AppBar(
+        title: Text("Manage Courses"),
+        centerTitle: true,
+      ),
+      drawer: AdminDrawer(),
       body: Padding(
         padding: const EdgeInsets.only(left: 16.0, right: 16.0),
         child: Column(

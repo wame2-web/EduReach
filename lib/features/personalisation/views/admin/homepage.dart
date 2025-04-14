@@ -37,8 +37,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
-      drawer: AdminDrawer(),
       body: _widgetOptions[
           _selectedIndex], // Display the selected screen based on index,
 
