@@ -1,9 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:edureach/features/authentication/login.dart';
-import 'package:edureach/widgets/student_drawer.dart';
+import 'package:edureach/widgets/admin_drawer.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -167,7 +166,7 @@ class _StudentProfileState extends State<Profile> {
           ),
         ],
       ),
-      drawer: const StudentDrawer(),
+      drawer: const AdminDrawer(),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
