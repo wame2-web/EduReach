@@ -1,4 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:edureach/features/personalisation/views/admin/add_flashcard.dart';
+import 'package:edureach/features/personalisation/views/admin/add_lesson.dart';
+import 'package:edureach/features/personalisation/views/admin/add_quiz.dart';
+import 'package:edureach/features/personalisation/views/admin/flashcard_list.dart';
 import 'package:feather_icons/feather_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
@@ -26,7 +30,7 @@ class _CourseDetailsState extends State<CourseDetails> with SingleTickerProvider
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -75,6 +79,7 @@ class _CourseDetailsState extends State<CourseDetails> with SingleTickerProvider
                 tabs: const [
                   Tab(text: "Lessons", icon: Icon(FeatherIcons.book)),
                   Tab(text: "Quizzes", icon: Icon(FeatherIcons.checkSquare)),
+                  Tab(text: "Flashcards", icon: Icon(FeatherIcons.layers)),
                   Tab(text: "Students", icon: Icon(FeatherIcons.users)),
                 ],
               ),
@@ -84,6 +89,7 @@ class _CourseDetailsState extends State<CourseDetails> with SingleTickerProvider
               children: [
                 LessonList(courseId: widget.courseId),
                 QuizList(courseId: widget.courseId),
+                FlashcardList(courseId: widget.courseId),
                 StudentList(courseId: widget.courseId),
               ],
             ),
@@ -106,22 +112,35 @@ class _CourseDetailsState extends State<CourseDetails> with SingleTickerProvider
           onPressed: () => _addQuiz(context),
           child: const Icon(Icons.add),
         );
+      case 2:
+        FloatingActionButton(
+          onPressed: () => _addFlashcard(context),
+          child: const Icon(Icons.add),
+        );
       default:
         return null;
     }
+    return null;
   }
 
   void _addLesson(BuildContext context) {
-    // TODO: Implement add lesson
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Add lesson functionality')),
+    showDialog(
+      context: context,
+      builder: (context) => AddLessonDialog(courseId: widget.courseId),
     );
   }
 
   void _addQuiz(BuildContext context) {
-    // TODO: Implement add quiz
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Add quiz functionality')),
+    showDialog(
+      context: context,
+      builder: (context) => AddQuizDialog(courseId: widget.courseId),
+    );
+  }
+
+  void _addFlashcard(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AddFlashcardDialog(courseId: widget.courseId),
     );
   }
 
