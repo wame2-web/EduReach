@@ -45,10 +45,9 @@ class _AdminDrawerState extends State<AdminDrawer> {
     if (shouldLogout == true) {
       await FirebaseAuth.instance.signOut();
       if (mounted) {
-        Navigator.pushAndRemoveUntil(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const Login()),
-              (route) => false,
         );
       }
     }
@@ -196,7 +195,7 @@ class _AdminDrawerState extends State<AdminDrawer> {
           ),
           const SizedBox(height: 12),
           Text(
-            FirebaseAuth.instance.currentUser?.displayName ?? "John Doe",
+            FirebaseAuth.instance.currentUser?.displayName ?? "UNKNOWN",
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -205,7 +204,7 @@ class _AdminDrawerState extends State<AdminDrawer> {
           ),
           const SizedBox(height: 4),
           Text(
-            FirebaseAuth.instance.currentUser?.email ?? "student@example.com",
+            FirebaseAuth.instance.currentUser?.email ?? "UNKNOWN",
             style: TextStyle(
               fontSize: 14,
               color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
