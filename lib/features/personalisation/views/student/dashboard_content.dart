@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:edureach/features/personalisation/views/student/course_details.dart';
 import 'package:edureach/features/personalisation/views/student/courses.dart';
 import 'package:edureach/widgets/course_card.dart';
 import 'package:edureach/widgets/search_input_text.dart';
 import 'package:edureach/widgets/student_drawer.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'flashcards.dart';
 
@@ -176,6 +178,12 @@ class _StudentContentState extends State<StudentContent> {
                       return const Center(child: CircularProgressIndicator());
                     }
 
+                    // Get current user ID
+                    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+                    if (currentUserId == null) {
+                      return const Center(child: Text('Please sign in to view your courses'));
+                    }
+
                     final courses = snapshot.data!.docs.where((doc) {
                       final data = doc.data() as Map<String, dynamic>;
                       final title =
@@ -183,22 +191,23 @@ class _StudentContentState extends State<StudentContent> {
                       return title.contains(_searchQuery);
                     }).toList();
 
-                    if (courses.isEmpty) {
-                      return Center(
-                        child: Text(
-                          'No courses found',
-                          style: theme.textTheme.bodyLarge,
-                        ),
-                      );
+                    final myCourses = snapshot.data!.docs.where((doc) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      final userIds = data['userID'] as List? ?? [];
+                      return userIds.contains(currentUserId);
+                    }).toList();
+
+                    if (myCourses.isEmpty) {
+                      return const Center(child: Text('You are not enrolled in any courses'));
                     }
 
                     return PageView.builder(
                       controller: _pageController,
-                      itemCount: courses.length,
+                      itemCount: myCourses.length,
                       physics: const BouncingScrollPhysics(),
                       padEnds: false,
                       itemBuilder: (context, index) {
-                        final course = courses[index];
+                        final course = myCourses[index];
                         final data = course.data() as Map<String, dynamic>;
                         final studentCount =
                             (data['userID'] as List?)?.length ?? 0;
@@ -329,6 +338,6 @@ class _StudentContentState extends State<StudentContent> {
   }
 
   void _viewCourseDetails(String courseId) {
-    Navigator.pushNamed(context, '/course-details', arguments: courseId);
+    Navigator.push(context, MaterialPageRoute(builder: (context) => CourseDetails(courseId: courseId)));
   }
 }
