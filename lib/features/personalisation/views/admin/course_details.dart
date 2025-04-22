@@ -31,6 +31,23 @@ class _CourseDetailsState extends State<CourseDetails> with SingleTickerProvider
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(_handleTabChange);
+  }
+
+  @override
+  void dispose() {
+    _tabController.removeListener(_handleTabChange);
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  void _handleTabChange() {
+    print('Current tab index: ${_tabController.index}');
+
+    if(_tabController.index == 3) {
+      return ;
+    }
+    setState(() {}); // Force rebuild when tab changes
   }
 
   @override
@@ -59,42 +76,39 @@ class _CourseDetailsState extends State<CourseDetails> with SingleTickerProvider
         final courseData = snapshot.data!.data() as Map<String, dynamic>? ?? {};
         final (cardColor, textColor) = _getCourseColors(courseData['category']);
 
-        return DefaultTabController(
-          length: 3,
-          child: Scaffold(
-            appBar: AppBar(
-              title: Text(
-                courseData['title'] ?? 'Course Details',
-                style: const TextStyle(fontSize: 20),
-              ),
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => Navigator.pop(context),
-              ),
-              bottom: TabBar(
-                controller: _tabController,
-                labelColor: Theme.of(context).primaryColor,
-                unselectedLabelColor: Colors.grey,
-                indicatorColor: Theme.of(context).primaryColor,
-                tabs: const [
-                  Tab(text: "Lessons", icon: Icon(FeatherIcons.book)),
-                  Tab(text: "Quizzes", icon: Icon(FeatherIcons.checkSquare)),
-                  Tab(text: "Flashcards", icon: Icon(FeatherIcons.layers)),
-                  Tab(text: "Students", icon: Icon(FeatherIcons.users)),
-                ],
-              ),
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(
+              courseData['title'] ?? 'Course Details',
+              style: const TextStyle(fontSize: 20),
             ),
-            body: TabBarView(
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => Navigator.pop(context),
+            ),
+            bottom: TabBar(
               controller: _tabController,
-              children: [
-                LessonList(courseId: widget.courseId),
-                QuizList(courseId: widget.courseId),
-                FlashcardList(courseId: widget.courseId),
-                StudentList(courseId: widget.courseId),
+              labelColor: Theme.of(context).primaryColor,
+              unselectedLabelColor: Colors.grey,
+              indicatorColor: Theme.of(context).primaryColor,
+              tabs: const [
+                Tab(text: "Lessons", icon: Icon(FeatherIcons.book)),
+                Tab(text: "Quizzes", icon: Icon(FeatherIcons.checkSquare)),
+                Tab(text: "Flashcards", icon: Icon(FeatherIcons.layers)),
+                Tab(text: "Students", icon: Icon(FeatherIcons.users)),
               ],
             ),
-            floatingActionButton: _getFloatingActionButton(),
           ),
+          body: TabBarView(
+            controller: _tabController,
+            children: [
+              LessonList(courseId: widget.courseId),
+              QuizList(courseId: widget.courseId),
+              FlashcardList(courseId: widget.courseId),
+              StudentList(courseId: widget.courseId),
+            ],
+          ),
+          floatingActionButton: _getFloatingActionButton(),
         );
       },
     );
@@ -103,24 +117,50 @@ class _CourseDetailsState extends State<CourseDetails> with SingleTickerProvider
   Widget? _getFloatingActionButton() {
     switch (_tabController.index) {
       case 0: // Lessons
-        return FloatingActionButton(
+        return FloatingActionButton.extended(
           onPressed: () => _addLesson(context),
-          child: const Icon(Icons.add),
+          backgroundColor: Theme.of(context).primaryColor,
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(50),
+          ),
+          icon: const Icon(Icons.add, color: Colors.white),
+          label: const Text(
+            'New Lesson',
+            style: TextStyle(color: Colors.white),
+          ),
         );
       case 1: // Quizzes
-        return FloatingActionButton(
+        return FloatingActionButton.extended(
           onPressed: () => _addQuiz(context),
-          child: const Icon(Icons.add),
+          backgroundColor: Theme.of(context).primaryColor,
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(50),
+          ),
+          icon: const Icon(Icons.add, color: Colors.white),
+          label: const Text(
+            'New Quiz',
+            style: TextStyle(color: Colors.white),
+          ),
         );
-      case 2:
-        FloatingActionButton(
+      case 2: // Flashcards
+        return FloatingActionButton.extended(
           onPressed: () => _addFlashcard(context),
-          child: const Icon(Icons.add),
+          backgroundColor: Theme.of(context).primaryColor,
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(50),
+          ),
+          icon: const Icon(Icons.add, color: Colors.white),
+          label: const Text(
+            'New Flashcard',
+            style: TextStyle(color: Colors.white),
+          ),
         );
       default:
         return null;
     }
-    return null;
   }
 
   void _addLesson(BuildContext context) {
