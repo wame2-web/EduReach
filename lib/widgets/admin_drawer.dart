@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:edureach/features/authentication/login.dart';
 import 'package:edureach/features/personalisation/views/admin/homepage.dart';
 import 'package:edureach/features/personalisation/views/admin/manage_courses.dart';
@@ -16,6 +17,44 @@ class AdminDrawer extends StatefulWidget {
 class _AdminDrawerState extends State<AdminDrawer> {
   // Current selected index
   int _selectedIndex = 0;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  late DocumentReference _userDocRef;
+
+  String userName = "";
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeUserData();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  void _initializeUserData() {
+    final userId = _auth.currentUser?.uid;
+    if (userId != null) {
+      _userDocRef = _firestore.collection('users').doc(userId);
+      _loadUserData();
+    }
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      final docSnapshot = await _userDocRef.get();
+      if (docSnapshot.exists) {
+        final data = docSnapshot.data() as Map<String, dynamic>;
+        setState(() {
+          userName = data['fullName'] ?? '';
+        });
+      }
+    } catch (e) {
+      print('Error loading user data: $e');
+    }
+  }
 
   // Logout user with confirmation
   Future<void> logoutUser() async {
@@ -195,7 +234,7 @@ class _AdminDrawerState extends State<AdminDrawer> {
           ),
           const SizedBox(height: 12),
           Text(
-            FirebaseAuth.instance.currentUser?.displayName ?? "UNKNOWN",
+            userName == " " ? "UNKNOWN" : userName,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
