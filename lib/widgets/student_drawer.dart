@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:edureach/features/authentication/login.dart';
 import 'package:edureach/features/personalisation/views/student/courses.dart';
 import 'package:edureach/features/personalisation/views/student/downloads.dart';
@@ -19,6 +20,44 @@ class StudentDrawer extends StatefulWidget {
 class _StudentDrawerState extends State<StudentDrawer> {
   // Current selected index
   int _selectedIndex = 0;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  late DocumentReference _userDocRef;
+
+  String userName = "";
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeUserData();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  void _initializeUserData() {
+    final userId = _auth.currentUser?.uid;
+    if (userId != null) {
+      _userDocRef = _firestore.collection('users').doc(userId);
+      _loadUserData();
+    }
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      final docSnapshot = await _userDocRef.get();
+      if (docSnapshot.exists) {
+        final data = docSnapshot.data() as Map<String, dynamic>;
+        setState(() {
+          userName = data['fullName'] ?? '';
+        });
+      }
+    } catch (e) {
+      print('Error loading user data: $e');
+    }
+  }
 
   // Logout user with confirmation
   Future<void> logoutUser() async {
@@ -48,10 +87,9 @@ class _StudentDrawerState extends State<StudentDrawer> {
     if (shouldLogout == true) {
       await FirebaseAuth.instance.signOut();
       if (mounted) {
-        Navigator.pushAndRemoveUntil(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const Login()),
-              (route) => false,
         );
       }
     }
@@ -210,7 +248,7 @@ class _StudentDrawerState extends State<StudentDrawer> {
           ),
           const SizedBox(height: 12),
           Text(
-            FirebaseAuth.instance.currentUser?.displayName ?? "John Doe",
+            userName == " " ? "UNKNOWN" : userName,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -219,7 +257,7 @@ class _StudentDrawerState extends State<StudentDrawer> {
           ),
           const SizedBox(height: 4),
           Text(
-            FirebaseAuth.instance.currentUser?.email ?? "student@example.com",
+            FirebaseAuth.instance.currentUser?.email ?? "UNKNOWN",
             style: TextStyle(
               fontSize: 14,
               color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
