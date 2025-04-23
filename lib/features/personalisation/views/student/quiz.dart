@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:edureach/widgets/student_drawer.dart';
+import 'dart:async';
 
 class QuizzesView extends StatefulWidget {
   const QuizzesView({super.key});
@@ -27,10 +28,19 @@ class _QuizzesViewState extends State<QuizzesView> {
   int _score = 0;
   bool _quizSubmitted = false;
 
+  late Timer _quizTimer;
+  int _remainingTime = 0; // in seconds
+
   @override
   void initState() {
     super.initState();
     _loadAvailableCourses();
+  }
+
+  @override
+  void dispose() {
+    _quizTimer.cancel();
+    super.dispose();
   }
 
   Future<void> _loadAvailableCourses() async {
@@ -91,6 +101,7 @@ class _QuizzesViewState extends State<QuizzesView> {
       _selectedAnswerIndex = null;
       _score = 0;
       _quizSubmitted = false;
+      _remainingTime = (_selectedQuiz!.quizTime * 60); // Convert minutes to seconds
     });
 
     try {
@@ -105,6 +116,19 @@ class _QuizzesViewState extends State<QuizzesView> {
             .map((doc) => Question.fromFirestore(doc))
             .toList();
       });
+
+      // Start timer
+      _quizTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (_remainingTime > 0) {
+          if(mounted) {
+            setState(() => _remainingTime--);
+          }
+        } else {
+          _submitQuiz();
+          timer.cancel();
+        }
+      });
+
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error loading questions: $e')),
@@ -386,12 +410,38 @@ class _QuizzesViewState extends State<QuizzesView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Progress indicator
-          LinearProgressIndicator(
-            value: (_currentQuestionIndex + 1) / totalQuestions,
-            backgroundColor: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-            color: theme.colorScheme.primary,
-            minHeight: 8,
+
+          // Timer and progress indicator row
+          Row(
+            children: [
+              // Timer
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${(_remainingTime ~/ 60).toString().padLeft(2, '0')}:${(_remainingTime % 60).toString().padLeft(2, '0')}',
+                  style: TextStyle(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              // Progress indicator
+              Expanded(
+                flex: 3,
+                child: LinearProgressIndicator(
+                  value: (_currentQuestionIndex + 1) / totalQuestions,
+                  backgroundColor: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                  color: theme.colorScheme.primary,
+                  minHeight: 8,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
 
