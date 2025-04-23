@@ -1,3 +1,4 @@
+import 'package:edureach/features/personalisation/models/feedback_model.dart';
 import 'package:edureach/widgets/course_content_card.dart';
 import 'package:edureach/widgets/quizzes_card.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -5,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:edureach/features/personalisation/models/gamification.dart';
+import 'package:intl/intl.dart';
 
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
@@ -29,6 +31,8 @@ class _CourseDetailsState extends State<CourseDetails> with SingleTickerProvider
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   bool _isEnrolled = false;
   bool _isEnrolling = false;
+  final TextEditingController _feedbackController = TextEditingController();
+  int _rating = 0;
 
   @override
   void initState() {
@@ -39,6 +43,7 @@ class _CourseDetailsState extends State<CourseDetails> with SingleTickerProvider
 
   @override
   void dispose() {
+    _feedbackController.dispose();
     _tabController.dispose();
     super.dispose();
   }
@@ -321,6 +326,36 @@ class _CourseDetailsState extends State<CourseDetails> with SingleTickerProvider
     }
   }
 
+  Future<void> _submitFeedback() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || _rating == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a rating')),
+      );
+      return;
+    }
+
+    try {
+      await _firestore.collection('course_feedback').add({
+        'userId': user.uid,
+        'courseId': widget.courseId,
+        'feedbackText': _feedbackController.text,
+        'rating': _rating,
+        'createdAt': Timestamp.now(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Feedback submitted successfully!')),
+      );
+
+      _feedbackController.clear();
+      setState(() => _rating = 0);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to submit feedback: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -500,7 +535,7 @@ class _CourseDetailsState extends State<CourseDetails> with SingleTickerProvider
 
                           // Tab content
                           SizedBox(
-                            height: screenSizeHeight * 0.3,
+                            height: _tabController.index == 3 ? screenSizeHeight * 0.9 : screenSizeHeight * 0.3,
                             child: TabBarView(
                               controller: _tabController,
                               children: [
@@ -508,16 +543,13 @@ class _CourseDetailsState extends State<CourseDetails> with SingleTickerProvider
                                 _buildLessonsTab(lessonsSnapshot),
 
                                 // Material Tab
-                                const Center(
-                                    child:
-                                        Text("List of lessons pdf Materials")),
+                                _buildLessonsTab(lessonsSnapshot),
 
                                 // Quizzes Tab
                                 _buildQuizzesTab(quizzesSnapshot),
 
                                 // Feedback Tab
-                                const Center(
-                                    child: Text("List of lessons feedbacks")),
+                                _buildFeedbackTab(),
                               ],
                             ),
                           ),
@@ -637,4 +669,145 @@ class _CourseDetailsState extends State<CourseDetails> with SingleTickerProvider
       },
     );
   }
+
+  Widget _buildFeedbackTab() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _firestore
+          .collection('course_feedback')
+          .where('courseId', isEqualTo: widget.courseId)
+          .orderBy('createdAt', descending: true)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final feedbackList = snapshot.data!.docs.map((doc) {
+          return CourseFeedback.fromMap(doc.id, doc.data() as Map<String, dynamic>);
+        }).toList();
+
+        return Column(
+          children: [
+            if (_isEnrolled) ...[
+              Card(
+                margin: const EdgeInsets.all(16),
+                elevation: 0,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Leave Feedback',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: List.generate(5, (index) {
+                          return IconButton(
+                            icon: Icon(
+                              index < _rating ? Icons.star : Icons.star_border,
+                              color: Colors.amber,
+                              size: 30,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _rating = index + 1;
+                              });
+                            },
+                          );
+                        }),
+                      ),
+                      TextField(
+                        controller: _feedbackController,
+                        decoration: const InputDecoration(
+                          labelText: 'Your feedback (optional)',
+                          border: OutlineInputBorder(),
+                        ),
+                        maxLines: 3,
+                      ),
+                      const SizedBox(height: 10),
+                      ElevatedButton(
+                        onPressed: _submitFeedback,
+                        style: ElevatedButton.styleFrom(
+                          elevation: 0,
+                          backgroundColor: Colors.white
+                        ),
+                        child: const Text('Submit Feedback'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+            Expanded(
+              child: feedbackList.isEmpty
+                  ? const Center(child: Text('No feedback yet'))
+                  : ListView.builder(
+                itemCount: feedbackList.length,
+                itemBuilder: (context, index) {
+                  final feedback = feedbackList[index];
+                  return FutureBuilder<DocumentSnapshot>(
+                    future: _firestore.collection('users').doc(feedback.userId).get(),
+                    builder: (context, userSnapshot) {
+                      final userName = userSnapshot.hasData
+                          ? (userSnapshot.data!.data() as Map<String, dynamic>)['fullName'] ?? 'Anonymous'
+                          : 'Anonymous';
+
+                      return Card(
+                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    userName,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    '${feedback.rating}/5',
+                                    style: const TextStyle(
+                                      color: Colors.amber,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const Icon(Icons.star, color: Colors.amber, size: 16),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              if (feedback.feedbackText.isNotEmpty)
+                                Text(feedback.feedbackText),
+                              const SizedBox(height: 8),
+                              Text(
+                                DateFormat('dd/MM/yyyy').format(feedback.createdAt),
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
 }
