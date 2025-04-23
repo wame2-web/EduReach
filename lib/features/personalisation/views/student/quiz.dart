@@ -470,14 +470,14 @@ class _QuizzesViewState extends State<QuizzesView> {
       backgroundColor = theme.colorScheme.primary.withOpacity(0.1);
       borderColor = theme.colorScheme.primary;
     }
-    if (isCorrect) {
-      backgroundColor = Colors.green.withOpacity(0.1);
-      borderColor = Colors.green;
-    }
-    if (isIncorrect) {
-      backgroundColor = Colors.red.withOpacity(0.1);
-      borderColor = Colors.red;
-    }
+    // if (isCorrect) {
+    //   backgroundColor = Colors.green.withOpacity(0.1);
+    //   borderColor = Colors.green;
+    // }
+    // if (isIncorrect) {
+    //   backgroundColor = Colors.red.withOpacity(0.1);
+    //   borderColor = Colors.red;
+    // }
 
     return GestureDetector(
       onTap: () => _selectAnswer(index),
