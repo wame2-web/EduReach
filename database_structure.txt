@@ -82,3 +82,31 @@ E-Learning Platform Database Structure
     ├── Courses (1) → (many) Flashcards (as sub-collection)
     ├── Quizzes (1) → (many) Questions (as sub-collection)
     └── Users (1) → (many) Lesson Progress records
+
+// user_progress collection (main collection)
+fields:
+  - userId: String (reference to users)
+  - xp: Number
+  - level: Number
+  - currentStreak: Number
+  - longestStreak: Number
+  - lastActiveDate: Date
+  - badges: Array (of badge IDs)
+  - learningGoals: Array (of goal objects)
+  - skills: Map (key: subject, value: progress percentage)
+
+// badges collection (main collection)
+fields:
+  - name: String
+  - description: String
+  - imageUrl: String
+  - xpReward: Number
+  - criteria: String (e.g., "complete_5_lessons")
+
+// leaderboard collection (main collection)
+fields:
+  - userId: String (reference to users)
+  - userName: String
+  - xp: Number
+  - level: Number
+  - badgeCount: Number

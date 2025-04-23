@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:edureach/features/personalisation/views/student/course_details.dart';
 import 'package:edureach/features/personalisation/views/student/courses.dart';
+import 'package:edureach/features/personalisation/views/student/leaderboard.dart';
 import 'package:edureach/widgets/course_card.dart';
+import 'package:edureach/widgets/progress_indicator.dart';
 import 'package:edureach/widgets/search_input_text.dart';
 import 'package:edureach/widgets/student_drawer.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -63,6 +65,10 @@ class _StudentContentState extends State<StudentContent> {
               ),
 
               const SizedBox(height: 24),
+
+              _buildGamificationOverview(),
+
+              const SizedBox(height: 12),
 
               // In Progress Section
               _buildSectionHeader("In Progress", "View all", () {}),
@@ -339,5 +345,177 @@ class _StudentContentState extends State<StudentContent> {
 
   void _viewCourseDetails(String courseId) {
     Navigator.push(context, MaterialPageRoute(builder: (context) => CourseDetails(courseId: courseId)));
+  }
+
+  Widget _buildGamificationOverview() {
+    final theme = Theme.of(context);
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('user_progress')
+          .doc(FirebaseAuth.instance.currentUser?.uid)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (!snapshot.hasData || !snapshot.data!.exists) {
+          // Document doesn't exist, return a card with default/empty values
+          return _buildGamificationCard(
+            xp: 0,
+            level: 1,
+            currentStreak: 0,
+          );
+        }
+
+        final progressData = snapshot.data!.data() as Map<String, dynamic>;
+        final xp = progressData['xp'] ?? 0;
+        final level = progressData['level'] ?? 1;
+        final currentStreak = progressData['currentStreak'] ?? 0;
+
+        return _buildGamificationCard(
+          xp: xp,
+          level: level,
+          currentStreak: currentStreak,
+        );
+      },
+    );
+  }
+
+  Widget _buildGamificationCard({
+    required int xp,
+    required int level,
+    required int currentStreak,
+  }) {
+    final theme = Theme.of(context);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(5),
+        border: Border.all(
+          width: 0.1,
+          color: Colors.grey,
+        )
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Your Progress',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            XpProgressIndicator(
+              currentXp: xp,
+              xpToNextLevel: level * 1000,
+              level: level,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    children: [
+                      const Text('Current Streak'),
+                      const SizedBox(height: 4),
+                      Text(
+                        '$currentStreak days',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      const Text('Level'),
+                      const SizedBox(height: 4),
+                      Text(
+                        '$level',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      const Text('Total XP'),
+                      const SizedBox(height: 4),
+                      Text(
+                        '$xp',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                // Container(
+                //   padding: EdgeInsets.all(10),
+                //   decoration: BoxDecoration(
+                //     color: theme.colorScheme.primary,
+                //     borderRadius: BorderRadius.circular(15),
+                //     border: Border.all(
+                //       width: 0.5,
+                //       color: Colors.grey
+                //     )
+                //   ),
+                //   child: Text(
+                //       'Set Goals',
+                //     style: TextStyle(
+                //       color: Colors.white,
+                //       fontWeight: FontWeight.bold,
+                //     ),
+                //   ),
+                // ),
+                // const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context)=> LeaderboardScreen()));
+                  },
+                  child: Container(
+                    padding: EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary,
+                        borderRadius: BorderRadius.circular(15),
+                        border: Border.all(
+                            width: 0.5,
+                            color: Colors.grey
+                        )
+                    ),
+                    child: const Text(
+                      'Leaderboard',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:edureach/features/personalisation/models/gamification.dart';
+
 
 class CourseDetails extends StatefulWidget {
   final String courseId;
@@ -94,9 +96,19 @@ class _CourseDetailsState extends State<CourseDetails>
           'completedAt': FieldValue.serverTimestamp(),
         });
 
+        // Award XP
+        await _awardXp(user.uid, 50); // 50 XP per lesson
+
+        // Update streak
+        await _updateStreak(user.uid);
+
+        // Check for badge achievements
+        await _checkForBadges(user.uid);
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Lesson marked as completed!')),
+          const SnackBar(content: Text('Lesson completed! +50 XP')),
         );
+
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('You already completed this lesson')),
@@ -126,6 +138,124 @@ class _CourseDetailsState extends State<CourseDetails>
       return 'assets/phy.jpeg'; // Default image
     }
   }
+
+  Future<void> _awardXp(String userId, int xp) async {
+    final progressRef = _firestore.collection('user_progress').doc(userId);
+
+    await _firestore.runTransaction((transaction) async {
+      final doc = await transaction.get(progressRef);
+
+      if (doc.exists) {
+        final currentXp = doc['xp'] ?? 0;
+        final currentLevel = doc['level'] ?? 1;
+        final xpToNextLevel = currentLevel * 1000;
+        final newXp = currentXp + xp;
+        final newLevel = newXp >= xpToNextLevel ? currentLevel + 1 : currentLevel;
+
+        transaction.update(progressRef, {
+          'xp': newXp,
+          'level': newLevel,
+        });
+
+        // Update leaderboard
+        await _updateLeaderboard(userId, newXp, newLevel);
+      } else {
+        transaction.set(progressRef, {
+          'userId': userId,
+          'xp': xp,
+          'level': 1,
+          'currentStreak': 0,
+          'longestStreak': 0,
+          'lastActiveDate': FieldValue.serverTimestamp(),
+          'badges': [],
+          'learningGoals': [],
+          'skills': {},
+        });
+      }
+    });
+  }
+
+  Future<void> _updateStreak(String userId) async {
+    final progressRef = _firestore.collection('user_progress').doc(userId);
+    final now = DateTime.now();
+
+    await _firestore.runTransaction((transaction) async {
+      final doc = await transaction.get(progressRef);
+
+      if (doc.exists) {
+        final lastActiveDate = (doc['lastActiveDate'] as Timestamp).toDate();
+        final currentStreak = doc['currentStreak'] ?? 0;
+        final longestStreak = doc['longestStreak'] ?? 0;
+
+        // Check if last activity was yesterday (maintain streak)
+        final yesterday = DateTime(now.year, now.month, now.day - 1);
+        final isConsecutiveDay = lastActiveDate.isAfter(yesterday);
+
+        final newStreak = isConsecutiveDay ? currentStreak + 1 : 1;
+
+        transaction.update(progressRef, {
+          'currentStreak': newStreak,
+          'longestStreak': newStreak > longestStreak ? newStreak : longestStreak,
+          'lastActiveDate': FieldValue.serverTimestamp(),
+        });
+
+        // Award bonus XP for streaks
+        if (newStreak % 3 == 0) { // Every 3 days
+          await _awardXp(userId, 100);
+        }
+      }
+    });
+  }
+
+  Future<void> _checkForBadges(String userId) async {
+    final progressRef = _firestore.collection('user_progress').doc(userId);
+    final badgesRef = _firestore.collection('badges');
+
+    // Get user's completed lessons count
+    final lessonsCompleted = await _firestore
+        .collection('lesson_progress')
+        .where('userID', isEqualTo: userId)
+        .where('isCompleted', isEqualTo: true)
+        .get();
+
+    final completedCount = lessonsCompleted.docs.length;
+
+    // Check for badges
+    final badges = await badgesRef.get();
+
+    for (final badgeDoc in badges.docs) {
+      final badge = Badges.fromFirestore(badgeDoc);
+
+      if (badge.criteria == 'complete_5_lessons' && completedCount >= 5) {
+        // Award badge if not already earned
+        await progressRef.update({
+          'badges': FieldValue.arrayUnion([badge.id])
+        });
+
+        // Award XP for badge
+        await _awardXp(userId, badge.xpReward);
+      }
+      // Add more badge criteria checks as needed
+    }
+  }
+
+  Future<void> _updateLeaderboard(String userId, int xp, int level) async {
+    final userDoc = await _firestore.collection('users').doc(userId).get();
+    final userName = userDoc['fullName'] ?? 'Anonymous';
+    final badgeCount = (await _firestore
+        .collection('user_progress')
+        .doc(userId)
+        .get())['badges']?.length ?? 0;
+
+    await _firestore.collection('leaderboard').doc(userId).set({
+      'userId': userId,
+      'userName': userName,
+      'xp': xp,
+      'level': level,
+      'badgeCount': badgeCount,
+    }, SetOptions(merge: true));
+  }
+
 
   @override
   Widget build(BuildContext context) {

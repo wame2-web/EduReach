@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:edureach/features/authentication/login.dart';
+import 'package:edureach/features/personalisation/views/student/achievements.dart';
 import 'package:edureach/features/personalisation/views/student/courses.dart';
 import 'package:edureach/features/personalisation/views/student/downloads.dart';
 import 'package:edureach/features/personalisation/views/student/homepage.dart';
+import 'package:edureach/features/personalisation/views/student/leaderboard.dart';
 import 'package:edureach/features/personalisation/views/student/notifications.dart';
 import 'package:edureach/features/personalisation/views/student/reports.dart';
 import 'package:edureach/features/personalisation/views/student/student_profile.dart';
@@ -111,6 +113,16 @@ class _StudentDrawerState extends State<StudentDrawer> {
       title: "My Progress",
       icon: Icons.bar_chart_rounded,
       page: const MyProgress(),
+    ),
+    DrawerItem(
+      title: "Achievements",
+      icon: Icons.bar_chart_rounded,
+      page: const AchievementsScreen(),
+    ),
+    DrawerItem(
+      title: "Leaderboard",
+      icon: Icons.leaderboard,
+      page: const LeaderboardScreen(),
     ),
     DrawerItem(
       title: "Downloads",

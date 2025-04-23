@@ -1,5 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:edureach/features/authentication/login.dart';
+import 'package:edureach/features/personalisation/views/student/achievements.dart';
+import 'package:edureach/widgets/progress_indicator.dart';
+import 'package:edureach/widgets/streak_widget.dart';
 import 'package:edureach/widgets/student_drawer.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -423,6 +426,62 @@ class _StudentProfileState extends State<StudentProfile> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildGamificationSection(ThemeData theme) {
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('user_progress')
+          .doc(FirebaseAuth.instance.currentUser?.uid)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const CircularProgressIndicator();
+        }
+
+        final progressData = snapshot.data!.data() as Map<String, dynamic>;
+        final xp = progressData['xp'] ?? 0;
+        final level = progressData['level'] ?? 1;
+        final currentStreak = progressData['currentStreak'] ?? 0;
+        final longestStreak = progressData['longestStreak'] ?? 0;
+        final xpToNextLevel = level * 1000; // Example: 1000 XP per level
+
+        return Column(
+          children: [
+            const SizedBox(height: 20),
+            Text(
+              'Your Progress',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            XpProgressIndicator(
+              currentXp: xp,
+              xpToNextLevel: xpToNextLevel,
+              level: level,
+            ),
+            const SizedBox(height: 16),
+            StreakWidget(
+              currentStreak: currentStreak,
+              longestStreak: longestStreak,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AchievementsScreen(),
+                  ),
+                );
+              },
+              child: const Text('View Achievements'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
