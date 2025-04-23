@@ -39,4 +39,8 @@ flutter:
 
   #============== LOCAL ASSETS ================#
   assets:
-    - assets/
+    - assets/maths_1.jpeg
+    - assets/english.jpeg
+    - assets/bio_1.jpeg
+    - assets/physics.jpg
+    - assets/chem_2.jpeg
