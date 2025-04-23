@@ -84,7 +84,7 @@ class CourseContentCard extends StatelessWidget {
 
           // Download pdf
           Icon(
-            Icons.download,
+            CupertinoIcons.eye,
             color: const Color(0xFF00ADAE),
           ),
 

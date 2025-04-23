@@ -6,6 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:edureach/features/personalisation/models/gamification.dart';
 
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class CourseDetails extends StatefulWidget {
   final String courseId;
@@ -19,8 +23,8 @@ class CourseDetails extends StatefulWidget {
   State<CourseDetails> createState() => _CourseDetailsState();
 }
 
-class _CourseDetailsState extends State<CourseDetails>
-    with SingleTickerProviderStateMixin {
+class _CourseDetailsState extends State<CourseDetails> with SingleTickerProviderStateMixin {
+
   late TabController _tabController;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   bool _isEnrolled = false;
@@ -254,6 +258,67 @@ class _CourseDetailsState extends State<CourseDetails>
       'level': level,
       'badgeCount': badgeCount,
     }, SetOptions(merge: true));
+  }
+
+  void _openPdfInApp(BuildContext context, String pdfUrl, String lessonId, String courseId) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return SizedBox(
+          height: MediaQuery.of(context).size.height * 0.9,
+          child: Column(
+            children: [
+              AppBar(
+                title: const Text('PDF Viewer'),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.download),
+                    onPressed: () => _downloadPdf(pdfUrl),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              Expanded(
+                child: SfPdfViewer.network(
+                  pdfUrl,
+                  canShowPaginationDialog: true,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _downloadPdf(String url) async {
+    try {
+      final status = await Permission.storage.request();
+      if (!status.isGranted) {
+        throw Exception('Storage permission not granted');
+      }
+
+      final dir = await getApplicationDocumentsDirectory();
+      final taskId = await FlutterDownloader.enqueue(
+        url: url,
+        savedDir: dir.path,
+        fileName: 'lesson_${DateTime.now().millisecondsSinceEpoch}.pdf',
+        showNotification: true,
+        openFileFromNotification: true,
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Download started')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Download failed: $e')),
+      );
+    }
   }
 
 
@@ -522,7 +587,18 @@ class _CourseDetailsState extends State<CourseDetails>
           onTap: () {
             if (_isEnrolled) {
               _markLessonComplete(lessonDoc.id, widget.courseId);
-              // Navigate to lesson content here if needed
+              if (lesson['documentURL'] != null) {
+                _openPdfInApp(
+                    context,
+                    lesson['documentURL'],
+                    lessonDoc.id,
+                    widget.courseId
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('No PDF available for this lesson')),
+                );
+              }
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(

@@ -3,6 +3,7 @@ import 'package:edureach/features/authentication/login.dart';
 import 'package:edureach/features/personalisation/views/admin/homepage.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -11,6 +12,7 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    await FlutterDownloader.initialize();
 
   runApp(const MyApp());
 }
