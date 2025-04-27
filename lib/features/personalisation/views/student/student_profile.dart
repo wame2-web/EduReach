@@ -138,6 +138,117 @@ class _StudentProfileState extends State<StudentProfile> {
     super.dispose();
   }
 
+  Future<void> _deleteAccount() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Account'),
+        content: const Text(
+            'Are you sure you want to delete your account? This action cannot be undone. All your data will be permanently lost.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      setState(() => _isLoading = true);
+      // Delete Firestore data first
+      await _userDocRef.delete();
+
+      // Delete the authentication record
+      await _auth.currentUser?.delete();
+
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const Login()),
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Account deleted successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      setState(() => _isLoading = false);
+      _showErrorSnackbar('Error deleting account: $e');
+
+      // If the error is because the user needs to reauthenticate
+      if (e is FirebaseAuthException && e.code == 'requires-recent-login') {
+        _showReauthenticationDialog();
+      }
+    }
+  }
+
+  Future<void> _showReauthenticationDialog() async {
+    final passwordController = TextEditingController();
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reauthentication Required'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Please enter your password to confirm account deletion'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Password',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != true) return;
+
+    try {
+      setState(() => _isLoading = true);
+      final user = _auth.currentUser;
+      final credential = EmailAuthProvider.credential(
+        email: user?.email ?? '',
+        password: passwordController.text,
+      );
+
+      await user?.reauthenticateWithCredential(credential);
+      await _deleteAccount();
+    } catch (e) {
+      setState(() => _isLoading = false);
+      _showErrorSnackbar('Authentication failed: ${e.toString()}');
+    } finally {
+      passwordController.dispose();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -190,6 +301,8 @@ class _StudentProfileState extends State<StudentProfile> {
                   _buildProfileCard(theme, isDarkMode),
                   const SizedBox(height: 30),
                   _buildLogoutButton(theme),
+
+                  _buildDeleteAccountButton(theme),
                 ],
               ),
             ),
@@ -482,6 +595,40 @@ class _StudentProfileState extends State<StudentProfile> {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildDeleteAccountButton(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: SizedBox(
+        width: double.infinity,
+        child: OutlinedButton(
+          onPressed: _isLoading ? null : _deleteAccount,
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 15),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            side: BorderSide(color: theme.colorScheme.error),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.delete_outline, color: theme.colorScheme.error),
+              const SizedBox(width: 10),
+              Text(
+                "Delete Account",
+                style: TextStyle(
+                  fontSize: 16,
+                  color: theme.colorScheme.error,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
