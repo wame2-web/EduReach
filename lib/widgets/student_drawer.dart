@@ -25,6 +25,7 @@ class _StudentDrawerState extends State<StudentDrawer> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   late DocumentReference _userDocRef;
+  late Stream<QuerySnapshot> _notificationsStream;
 
   String userName = "";
 
@@ -32,11 +33,22 @@ class _StudentDrawerState extends State<StudentDrawer> {
   void initState() {
     super.initState();
     _initializeUserData();
+    _notificationsStream = _firestore
+        .collection('notifications')
+        .where('userId', isEqualTo: _auth.currentUser?.uid)
+        .orderBy('createdAt', descending: true)
+        .snapshots();
   }
 
   @override
   void dispose() {
     super.dispose();
+  }
+
+  int _countUnreadNotifications(QuerySnapshot snapshot) {
+    return snapshot.docs
+        .where((doc) => doc['isRead'] == false)
+        .length;
   }
 
   void _initializeUserData() {
@@ -98,49 +110,50 @@ class _StudentDrawerState extends State<StudentDrawer> {
   }
 
   // Navigation items
-  final List<DrawerItem> _drawerItems = [
-    DrawerItem(
-      title: "Dashboard",
-      icon: Icons.home_rounded,
-      page: const StudentDashboard(),
-    ),
-    DrawerItem(
-      title: "Courses",
-      icon: Icons.library_books_rounded,
-      page: const StudentCourses(),
-    ),
-    DrawerItem(
-      title: "My Progress",
-      icon: Icons.bar_chart_rounded,
-      page: const MyProgress(),
-    ),
-    DrawerItem(
-      title: "Achievements",
-      icon: Icons.bar_chart_rounded,
-      page: const AchievementsScreen(),
-    ),
-    DrawerItem(
-      title: "Leaderboard",
-      icon: Icons.leaderboard,
-      page: const LeaderboardScreen(),
-    ),
-    DrawerItem(
-      title: "Downloads",
-      icon: Icons.download_rounded,
-      page: const Downloads(),
-    ),
-    DrawerItem(
-      title: "Notifications",
-      icon: Icons.notifications_rounded,
-      page: const Notifications(),
-      badgeCount: 3,
-    ),
-    DrawerItem(
-      title: "Reports",
-      icon: Icons.assessment_rounded,
-      page: const Reports(),
-    ),
-  ];
+  List<DrawerItem> get _drawerItems {
+    return [
+      DrawerItem(
+        title: "Dashboard",
+        icon: Icons.home_rounded,
+        page: const StudentDashboard(),
+      ),
+      DrawerItem(
+        title: "Courses",
+        icon: Icons.library_books_rounded,
+        page: const StudentCourses(),
+      ),
+      DrawerItem(
+        title: "My Progress",
+        icon: Icons.bar_chart_rounded,
+        page: const MyProgress(),
+      ),
+      DrawerItem(
+        title: "Achievements",
+        icon: Icons.bar_chart_rounded,
+        page: const AchievementsScreen(),
+      ),
+      DrawerItem(
+        title: "Leaderboard",
+        icon: Icons.leaderboard,
+        page: const LeaderboardScreen(),
+      ),
+      DrawerItem(
+        title: "Downloads",
+        icon: Icons.download_rounded,
+        page: const Downloads(),
+      ),
+      DrawerItem(
+        title: "Notifications",
+        icon: Icons.notifications_rounded,
+        page: const Notifications(),
+      ),
+      DrawerItem(
+        title: "Reports",
+        icon: Icons.assessment_rounded,
+        page: const Reports(),
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -163,7 +176,7 @@ class _StudentDrawerState extends State<StudentDrawer> {
             children: [
               // User Header
               _buildUserHeader(theme, isDarkMode),
-      
+
               // Navigation Items
               Expanded(
                 child: ListView.builder(
@@ -180,7 +193,7 @@ class _StudentDrawerState extends State<StudentDrawer> {
                   },
                 ),
               ),
-      
+
               // Logout Button
               Padding(
                 padding: const EdgeInsets.all(16),
@@ -288,6 +301,79 @@ class _StudentDrawerState extends State<StudentDrawer> {
   }) {
     final isSelected = _selectedIndex == index;
 
+    // Special handling for notifications item
+    if (item.title == "Notifications") {
+      return StreamBuilder<QuerySnapshot>(
+        stream: _notificationsStream,
+        builder: (context, snapshot) {
+          final unreadCount = snapshot.hasData ? _countUnreadNotifications(snapshot.data!) : 0;
+
+          return Container(
+            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? theme.colorScheme.primary.withOpacity(0.2)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: ListTile(
+              onTap: () {
+                setState(() => _selectedIndex = index);
+                _navigateTo(item.page);
+              },
+              leading: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? theme.colorScheme.primary.withOpacity(0.3)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  item.icon,
+                  color: isSelected
+                      ? theme.colorScheme.primary
+                      : isDarkMode
+                      ? Colors.grey[300]
+                      : Colors.grey[700],
+                  size: 24,
+                ),
+              ),
+              title: Text(
+                item.title,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isDarkMode ? Colors.white : Colors.black,
+                ),
+              ),
+              trailing: unreadCount > 0
+                  ? Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  unreadCount.toString(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              )
+                  : null,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+        },
+      );
+    }
+
+    // Regular items
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
