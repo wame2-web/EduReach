@@ -438,7 +438,7 @@ class _ManageUsersState extends State<ManageUsers> with SingleTickerProviderStat
     final emailController = TextEditingController();
     final passwordController = TextEditingController();
     final nameController = TextEditingController();
-    String _selectedRole = 'student';
+    String _selectedRole = 'admin';
 
     showModalBottomSheet(
       context: context,
@@ -565,7 +565,7 @@ class _ManageUsersState extends State<ManageUsers> with SingleTickerProviderStat
                       filled: true,
                       fillColor: Colors.grey[100],
                     ),
-                    items: ['student', 'admin']
+                    items: ['admin']
                         .map<DropdownMenuItem<String>>((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
