@@ -357,6 +357,60 @@ class _CourseDetailsState extends State<CourseDetails> with SingleTickerProvider
     }
   }
 
+  Future<void> _unEnroll() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Account'),
+        content: const Text(
+            'Are you sure you want to unroll from this course?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              'Proceed',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() => _isEnrolling = true);
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      await _firestore.collection('courses').doc(widget.courseId).update({
+        'userID': FieldValue.arrayRemove([user.uid])
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Successfully removed from course.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      _checkEnrollment(); // Update the enrollment status
+    } catch(e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() => _isEnrolling = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final double screenSizeWidth = MediaQuery.of(context).size.width;
@@ -559,14 +613,14 @@ class _CourseDetailsState extends State<CourseDetails> with SingleTickerProvider
                           // Enroll Button
                           Center(
                             child: GestureDetector(
-                              onTap: _isEnrolled ? null : _handleEnrollment,
+                              onTap: _isEnrolled ? _unEnroll : _handleEnrollment,
                               child: Container(
                                 width: screenSizeWidth * 0.5,
                                 height: screenSizeHeight * 0.07,
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
                                   color: _isEnrolled
-                                      ? Colors.grey
+                                      ? const Color(0xFF00ADAE)
                                       : const Color(0xFF00ADAE),
                                   borderRadius: BorderRadius.circular(25),
                                 ),
@@ -574,7 +628,7 @@ class _CourseDetailsState extends State<CourseDetails> with SingleTickerProvider
                                     ? const CircularProgressIndicator(
                                         color: Colors.white)
                                     : Text(
-                                        _isEnrolled ? "Enrolled" : "Enroll",
+                                        _isEnrolled ? "Unroll" : "Enroll",
                                         style: const TextStyle(
                                           fontSize: 20,
                                           fontWeight: FontWeight.bold,
