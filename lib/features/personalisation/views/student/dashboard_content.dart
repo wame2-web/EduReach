@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:edureach/features/personalisation/views/student/course_details.dart';
 import 'package:edureach/features/personalisation/views/student/courses.dart';
 import 'package:edureach/features/personalisation/views/student/leaderboard.dart';
+import 'package:edureach/features/personalisation/views/student/student_progress.dart';
 import 'package:edureach/widgets/course_card.dart';
 import 'package:edureach/widgets/progress_indicator.dart';
 import 'package:edureach/widgets/search_input_text.dart';
@@ -147,9 +148,9 @@ class _StudentContentState extends State<StudentContent> {
                         () => Navigator.push(context, MaterialPageRoute(builder: (context) => QuizzesView()))
                     ),
                     const SizedBox(width: 12),
-                    _buildQuickAccessItem(
-                        Icons.assignment, "Exams", Colors.purple, null),
-                    const SizedBox(width: 12),
+                    // _buildQuickAccessItem(
+                    //     Icons.assignment, "Exams", Colors.purple, null),
+                    // const SizedBox(width: 12),
                     _buildQuickAccessItem(
                         Icons.library_books,
                         "Flashcards",
@@ -158,7 +159,7 @@ class _StudentContentState extends State<StudentContent> {
                     ),
                     const SizedBox(width: 12),
                     _buildQuickAccessItem(
-                        Icons.video_library, "Videos", Colors.blue, null),
+                        Icons.bar_chart, "My Progress", Colors.blue, () => Navigator.push(context, MaterialPageRoute(builder: (context)=> MyProgress()))),
                   ],
                 ),
               ),
