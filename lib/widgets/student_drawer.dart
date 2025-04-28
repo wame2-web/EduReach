@@ -137,21 +137,21 @@ class _StudentDrawerState extends State<StudentDrawer> {
         icon: Icons.leaderboard,
         page: const LeaderboardScreen(),
       ),
-      DrawerItem(
-        title: "Downloads",
-        icon: Icons.download_rounded,
-        page: const Downloads(),
-      ),
+      // DrawerItem(
+      //   title: "Downloads",
+      //   icon: Icons.download_rounded,
+      //   page: const Downloads(),
+      // ),
       DrawerItem(
         title: "Notifications",
         icon: Icons.notifications_rounded,
         page: const Notifications(),
       ),
-      DrawerItem(
-        title: "Reports",
-        icon: Icons.assessment_rounded,
-        page: const Reports(),
-      ),
+      // DrawerItem(
+      //   title: "Reports",
+      //   icon: Icons.assessment_rounded,
+      //   page: const Reports(),
+      // ),
     ];
   }
 
