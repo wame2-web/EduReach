@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:edureach/widgets/student_drawer.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -11,6 +12,7 @@ class LeaderboardScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Leaderboard'),
       ),
+      drawer: const StudentDrawer(),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('leaderboard')

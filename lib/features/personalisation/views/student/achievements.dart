@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:edureach/features/personalisation/models/gamification.dart';
 import 'package:edureach/widgets/progress_indicator.dart';
 import 'package:edureach/widgets/streak_widget.dart';
+import 'package:edureach/widgets/student_drawer.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -21,6 +22,7 @@ class AchievementsScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Your Achievements'),
       ),
+      drawer: const StudentDrawer(),
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection('user_progress')
