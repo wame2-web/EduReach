@@ -63,7 +63,24 @@ class _RegisterState extends State<Register> {
         'nationality': selectedNationality,
         'role': "student",
         'createdAt': FieldValue.serverTimestamp(),
-        // 'userID': userCredential.user!.uid,
+      });
+
+      // Send Student notification
+      await _firestore.collection('notifications').add({
+        'message': "Welcome to Edu-Reach! Enroll in courses to start learning.",
+        'isRead': false,
+        'userId': userCredential.user!.uid,
+      });
+
+      int nameLength = fullNameController.text.trim().length;
+
+      // Add student to Anonymous LeaderBoard
+      await _firestore.collection('leaderboard').add({
+        'badgeCount': 0,
+        'level': 1,
+        'userId': userCredential.user!.uid,
+        'userName': "${fullNameController.text.trim().substring(0,1)}*****${fullNameController.text.trim().substring(nameLength-1)}" ,
+        'xp': 0,
       });
 
       if (!mounted) return;
